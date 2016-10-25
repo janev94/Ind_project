@@ -19,13 +19,13 @@ public class BoardParserString extends BoardParser {
 			for(int j = 0; j < lines[i].length(); j++) { // width
 				switch(lines[i].charAt(j)) {
 				case 'x':
-					stonePositions[i][j] = new Stone(StoneOwner.BLACK);
+					stonePositions[i][j] = new Stone(StoneOwner.BLACK, i, j);
 					break;
 				case 'o':
-					stonePositions[i][j] = new Stone(StoneOwner.WHITE);
+					stonePositions[i][j] = new Stone(StoneOwner.WHITE, i, j);
 					break;
 				case '-':
-					stonePositions[i][j] = new Stone(StoneOwner.EMPTY);
+					stonePositions[i][j] = new Stone(StoneOwner.EMPTY, i, j);
 					break;
 				default:
 					System.out.println("Unrecognized character: " + lines[i].charAt(j));

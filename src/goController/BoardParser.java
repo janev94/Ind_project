@@ -15,7 +15,7 @@ public abstract class BoardParser {
 		
 		for(int x = 0; x < width; x++){
 			for(int y = 0; y < height; y++) {
-				stonePositions[x][y] = new Stone(StoneOwner.EMPTY);
+				stonePositions[x][y] = new Stone(StoneOwner.EMPTY, x, y);
 			}
 		}
 		

@@ -67,6 +67,7 @@ public class OccupiedBoardTest {
 		stonePositions = parser.parse();
 		board = new GoBoard(5, 9);
 		board.setStonePositions(stonePositions);
+		board.setPlayerToMove(StoneOwner.WHITE);
 		
 		assertFalse(board.isLegalMove(1, 3, StoneOwner.WHITE)); // causes white to have no liberties
 	}
@@ -77,6 +78,7 @@ public class OccupiedBoardTest {
 		stonePositions = parser.parse();
 		board = new GoBoard(5, 7);
 		board.setStonePositions(stonePositions);
+		board.setPlayerToMove(StoneOwner.WHITE);
 		
 		assertFalse(board.isLegalMove(2, 2, StoneOwner.WHITE));
 	}

@@ -23,7 +23,7 @@ public class GoBoard {
 		for(int x = 0; x < width; x++) {
 			for(int y = 0; y < height; y++)
 			{
-				stonePositions[x][y] = new Stone(StoneOwner.EMPTY);
+				stonePositions[x][y] = new Stone(StoneOwner.EMPTY, x, y);
 			}
 		}
 	}
@@ -31,6 +31,14 @@ public class GoBoard {
 	
 	public void setStonePositions(Stone[][] stonePositions) {
 		this.stonePositions = stonePositions;
+	}
+
+	public StoneOwner getPlayerToMove() {
+		return playerToMove;
+	}
+	
+	public void setPlayerToMove(StoneOwner playerToMove) {
+		this.playerToMove = playerToMove;
 	}
 	
 	/**
@@ -44,11 +52,11 @@ public class GoBoard {
 	 */
 	public boolean isLegalMove(int row, int column, StoneOwner playerPlacing)
 	{
+		if(!isInBounds(row, column))
+			return false;
 		if(stonePositions[row][column].getOwner() != StoneOwner.EMPTY)
 			return false;
 		if(playerToMove != playerPlacing)
-			return false;
-		if(!isInBounds(row, column))
 			return false;
 		//TODO: check for self capture
 		
@@ -65,15 +73,23 @@ public class GoBoard {
 		
 		enemyGroups.removeIf(x -> x == null);
 
+		boolean enemyCapture = false;
+		
 		if(enemyGroups.size() > 0)
 		{
 			for(Set<Stone> group : enemyGroups)
 			{
-				//count liberties, if liberties = 0, remove group from board
-				//update capture flag
+				if( countLiberties(group) == 0) {
+					enemyCapture = true;
+				}
 			}
 		}
 
+		if(!enemyCapture) {
+			if (countLiberties(fiendlyGroup) == 0)
+				return false;
+		}
+		
 		//If capture flag is not set, check whether
 		//friendly group has no liberties => self capture
 		
@@ -83,6 +99,30 @@ public class GoBoard {
 		return true;
 	}
 	
+	private int countLiberties(Set<Stone> group) {
+		Set<Stone> libertyPositions = new HashSet<>();
+		for(Stone stone : group) {
+			if(isLiberty(stonePositions[stone.getRow() + 1][stone.getCol()]))
+				libertyPositions.add(stonePositions[stone.getRow() + 1][stone.getCol()]);
+			if(isLiberty(stonePositions[stone.getRow() - 1][stone.getCol()]))
+				libertyPositions.add(stonePositions[stone.getRow() - 1][stone.getCol()]);
+			if(isLiberty(stonePositions[stone.getRow()][stone.getCol() + 1]))
+				libertyPositions.add(stonePositions[stone.getRow()][stone.getCol() + 1]);
+			if(isLiberty(stonePositions[stone.getRow()][stone.getCol() - 1]))
+				libertyPositions.add(stonePositions[stone.getRow()][stone.getCol() - 1]);
+		}
+			
+		return libertyPositions.size();
+	}
+
+
+	private boolean isLiberty(Stone stone) {
+		if(!isInBounds(stone.getRow(), stone.getCol()))
+			return false;
+		return stone.getOwner() == StoneOwner.EMPTY;
+	}
+
+
 	/**
 	 * Checks whether there's an enemy group at board position (row, column)
 	 * @param row
@@ -114,6 +154,8 @@ public class GoBoard {
 	
 	private void visit(int row, int column, StoneOwner colour, Set<Stone> group) {
 		if(isInBounds(row, column)) {
+			if(stonePositions[row][column].getOwner() == StoneOwner.EMPTY)
+				return;
 			if(stonePositions[row][column].getOwner() == colour) {
 				group.add(stonePositions[row][column]);
 			}

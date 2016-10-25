@@ -39,12 +39,14 @@ public class EmptyBoardTest {
 	
 	@Test
 	public void testMoveInEmptyBoardForBlack(){
-		assertTrue(board.isLegalMove(0, 0, StoneOwner.BLACK));
+		assertEquals(board.isLegalMove(0, 0, StoneOwner.BLACK),
+				board.getPlayerToMove() == StoneOwner.BLACK);
 	}
 	
 	@Test
 	public void testMoveInEmptyBoardForWhite() {
-		assertTrue(board.isLegalMove(0, 0, StoneOwner.WHITE));
+		assertEquals(board.isLegalMove(0, 0, StoneOwner.WHITE), 
+				board.getPlayerToMove() == StoneOwner.WHITE);
 	}
 	
 	@Test
