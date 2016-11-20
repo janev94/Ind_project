@@ -14,9 +14,10 @@ public class GoBoard {
 	
 	private Stone[][] stonePositions;
 	
-	public GoBoard(int width, int height) {
+	public GoBoard(int height, int width) {
 		this.width = width;
 		this.height = height;
+		
 		stonePositions = new Stone[width][height];
 		playerToMove = StoneOwner.BLACK;
 		
@@ -26,6 +27,11 @@ public class GoBoard {
 				stonePositions[x][y] = new Stone(StoneOwner.EMPTY, x, y);
 			}
 		}
+	}
+	
+	
+	public Stone[][] getStonePositions() {
+		return stonePositions;
 	}
 	
 	
@@ -58,6 +64,8 @@ public class GoBoard {
 			return false;
 		if(playerToMove != playerPlacing)
 			return false;
+		
+		
 		//TODO: check for self capture
 		
 		Set<Stone> fiendlyGroup = getGroup(row, column, playerPlacing);
@@ -98,6 +106,47 @@ public class GoBoard {
 		
 		return true;
 	}
+
+	/**
+	 * given a Stone stone, return all its neighbour positions
+	 * @param stone
+	 * @return a set of neighbor positions
+	 */
+	public Set<Stone> getNeighbors(Stone stone)
+	{
+		Set<Stone> result = new HashSet<>();
+		if(isInBounds(stone.getRow() + 1, stone.getCol()))
+			result.add(stonePositions[stone.getRow() + 1][stone.getCol()]);
+		
+		if(isInBounds(stone.getRow() - 1, stone.getCol()))
+			result.add(stonePositions[stone.getRow() - 1][stone.getCol()]);
+		
+		if(isInBounds(stone.getRow(), stone.getCol() + 1))
+			result.add(stonePositions[stone.getRow()][stone.getCol() + 1]);
+		
+		if(isInBounds(stone.getRow(), stone.getCol() - 1))
+			result.add(stonePositions[stone.getRow()][stone.getCol() - 1]);
+		
+		return result;
+	}
+	
+	public Set<Set<Stone>> getGroups() {
+		
+		return null;
+	}
+	
+	
+	/**
+	 * Find the group where this stone belongs to
+	 * @param stone
+	 * @return
+	 */
+	public Set<Stone> findGroup(Stone stone) {
+		
+		
+		return null;
+	}
+	
 	
 	private int countLiberties(Set<Stone> group) {
 		Set<Stone> libertyPositions = new HashSet<>();
@@ -166,7 +215,7 @@ public class GoBoard {
 		}
 	}
 	
-	private boolean isInBounds(int row, int column) {
+	public boolean isInBounds(int row, int column) {
 		return row >= 0 && row < height && column >= 0 && column < width ;
 	}
 
