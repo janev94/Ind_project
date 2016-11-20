@@ -69,7 +69,9 @@ public class OccupiedBoardTest {
 		board.setStonePositions(stonePositions);
 		board.setPlayerToMove(StoneOwner.WHITE);
 		
-		assertFalse(board.isLegalMove(1, 3, StoneOwner.WHITE)); // causes white to have no liberties
+		// causes white to have no liberties
+		boolean isLegal = board.isLegalMove(1, 3, StoneOwner.WHITE); 
+		assertFalse(isLegal); 
 	}
 	
 	@Test
