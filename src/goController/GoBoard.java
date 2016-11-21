@@ -130,9 +130,16 @@ public class GoBoard {
 		return result;
 	}
 	
-	public Set<Set<Stone>> getGroups() {
+	/**
+	 * Returns all the groups formed by the player from the given colour in the whole board
+	 * @return
+	 */
+	public Set<Set<Stone>> getGroups(StoneOwner searchedOwner) {
+		Set<Stone> visited = new HashSet<>();
+		Set<Set<Stone>> groups = new HashSet<>();
+		Set<Set<Stone>> result = iterateBoard(0, 0, visited, groups, searchedOwner);
 		
-		return null;
+		return result;
 	}
 	
 	
@@ -142,9 +149,67 @@ public class GoBoard {
 	 * @return
 	 */
 	public Set<Stone> findGroup(Stone stone) {
+		List<Stone> toVisit = new ArrayList<>();
+		Set<Stone> visited = new HashSet<>();
+		Set<Stone> group = new HashSet<>();
 		
+		Set<Stone> result = visit(toVisit, visited, group, stone.getOwner());
 		
-		return null;
+		return result;
+	}
+	
+	private Set<Stone> visit(List<Stone> toVisit, Set<Stone> visited, Set<Stone> group, StoneOwner searchedOwner)
+	{
+		if(toVisit.isEmpty())
+			return group;
+		
+		Stone current = toVisit.get(0);
+		Set<Stone> toVisitNeighbors = new HashSet<>();
+		Set<Stone> neighbors = getNeighbors(current);
+		for(Stone neighbor: neighbors)
+		{
+			if(!visited.contains(neighbor) && neighbor.getOwner() == searchedOwner)
+				toVisitNeighbors.add(neighbor);
+		}
+		
+		//update collections
+		toVisit.addAll(toVisitNeighbors);
+		visited.add(current);
+		group.add(current);
+		
+		return visit(toVisit, visited, group, searchedOwner);
+	}
+	
+	
+	public Set<Set<Stone>> iterateBoard(int startHeight, int startWidth, Set<Stone> visited, Set<Set<Stone>> groups, StoneOwner searchedOwner)
+	{
+		Stone currentStone = stonePositions[startHeight][startWidth];
+		Set<Stone> group;
+		if(!visited.contains(currentStone) && currentStone.getOwner() == searchedOwner)
+			group = findGroup(currentStone);
+		else
+			group = new HashSet<>();
+		
+		Stone nextStone = nextStone(currentStone);
+		
+		if(nextStone != null)
+		{
+			//update collections
+			visited.addAll(group);
+			groups.add(group);
+			return iterateBoard(nextStone.getCol(), nextStone.getRow(), visited, groups, searchedOwner);
+		}
+		else{
+			groups.add(group);
+			return groups;
+		}
+	}
+	
+	private Stone nextStone(Stone current)
+	{
+		if(current.getCol() < width - 2) return stonePositions[current.getCol() + 1][current.getRow()];
+		if(current.getRow() < height - 2) return stonePositions[current.getCol()][current.getRow() + 1];
+		else return null;
 	}
 	
 	
@@ -196,22 +261,22 @@ public class GoBoard {
 	{
 		Set<Stone> group = new HashSet<>();
 		
-		visit(row, column, colour, group);
+		visit_old(row, column, colour, group);
 		
 		return group;
 	}
 	
-	private void visit(int row, int column, StoneOwner colour, Set<Stone> group) {
+	private void visit_old(int row, int column, StoneOwner colour, Set<Stone> group) {
 		if(isInBounds(row, column)) {
 			if(stonePositions[row][column].getOwner() == StoneOwner.EMPTY)
 				return;
 			if(stonePositions[row][column].getOwner() == colour) {
 				group.add(stonePositions[row][column]);
 			}
-			visit(row + 1, column, colour, group);
-			visit(row - 1, column, colour, group);
-			visit(row, column + 1, colour, group);
-			visit(row, column - 1, colour, group);
+			visit_old(row + 1, column, colour, group);
+			visit_old(row - 1, column, colour, group);
+			visit_old(row, column + 1, colour, group);
+			visit_old(row, column - 1, colour, group);
 		}
 	}
 	
