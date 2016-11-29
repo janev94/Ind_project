@@ -11,12 +11,14 @@ public class GoBoard {
 	private int height;
 	private StoneOwner playerToMove;
 	private BoardParser parser;
+	private int stonesOnBoard;
 	
 	private Stone[][] stonePositions;
 	
 	public GoBoard(int height, int width) {
 		this.width = width;
 		this.height = height;
+		this.stonesOnBoard = 0;
 		
 		stonePositions = new Stone[width][height];
 		playerToMove = StoneOwner.BLACK;
@@ -37,6 +39,11 @@ public class GoBoard {
 	
 	public void setStonePositions(Stone[][] stonePositions) {
 		this.stonePositions = stonePositions;
+		stonesOnBoard = 0;
+		for(Stone[] row: stonePositions)
+			for(Stone stone: row)
+				if(stone.getOwner() != StoneOwner.EMPTY)
+					stonesOnBoard++;
 	}
 
 	public StoneOwner getPlayerToMove() {
@@ -65,44 +72,23 @@ public class GoBoard {
 		if(playerToMove != playerPlacing)
 			return false;
 		
-		
+		stonePositions[row][column].setOwner(playerPlacing);
 		//TODO: check for self capture
-		
-		Set<Stone> fiendlyGroup = getGroup(row, column, playerPlacing);
-		
-		StoneOwner opposingPlayer = playerPlacing.getOpposingColour();
-
-		Set<Set<Stone>> enemyGroups = new HashSet<>();
-		
-		enemyGroups.add(getGroup(row + 1, column, opposingPlayer));
-		enemyGroups.add(getGroup(row - 1, column, opposingPlayer));
-		enemyGroups.add(getGroup(row, column + 1, opposingPlayer));
-		enemyGroups.add(getGroup(row, column - 1, opposingPlayer));
-		
-		enemyGroups.removeIf(x -> x == null);
-
-		boolean enemyCapture = false;
-		
-		if(enemyGroups.size() > 0)
+		if(isSelfCapture(playerPlacing))
 		{
-			for(Set<Stone> group : enemyGroups)
-			{
-				if( countLiberties(group) == 0) {
-					enemyCapture = true;
-				}
-			}
-		}
-
-		if(!enemyCapture) {
-			if (countLiberties(fiendlyGroup) == 0)
-				return false;
+			stonePositions[row][column].setOwner(StoneOwner.EMPTY);
+			return false;
 		}
 		
-		//If capture flag is not set, check whether
-		//friendly group has no liberties => self capture
+		//TODO: check for KO
 		
-		//TODO: check for same state
-		
+		//remove all captured stones, decrease number of stones on board by captured amount
+		Set<Stone> capturedPieces = getCapturedPieces(playerPlacing.getOpposingColour());
+		for(Stone stone: capturedPieces)
+		{
+			stone.setOwner(StoneOwner.EMPTY);
+		}
+				
 		
 		return true;
 	}
@@ -153,6 +139,8 @@ public class GoBoard {
 		Set<Stone> visited = new HashSet<>();
 		Set<Stone> group = new HashSet<>();
 		
+		toVisit.add(stone);
+		
 		Set<Stone> result = visit(toVisit, visited, group, stone.getOwner());
 		
 		return result;
@@ -163,7 +151,8 @@ public class GoBoard {
 		if(toVisit.isEmpty())
 			return group;
 		
-		Stone current = toVisit.get(0);
+		Stone current = toVisit.remove(0);
+		visited.add(current);
 		Set<Stone> toVisitNeighbors = new HashSet<>();
 		Set<Stone> neighbors = getNeighbors(current);
 		for(Stone neighbor: neighbors)
@@ -197,7 +186,7 @@ public class GoBoard {
 			//update collections
 			visited.addAll(group);
 			groups.add(group);
-			return iterateBoard(nextStone.getCol(), nextStone.getRow(), visited, groups, searchedOwner);
+			return iterateBoard(nextStone.getRow(), nextStone.getCol(), visited, groups, searchedOwner);
 		}
 		else{
 			groups.add(group);
@@ -207,12 +196,54 @@ public class GoBoard {
 	
 	private Stone nextStone(Stone current)
 	{
-		if(current.getCol() < width - 2) return stonePositions[current.getCol() + 1][current.getRow()];
-		if(current.getRow() < height - 2) return stonePositions[current.getCol()][current.getRow() + 1];
+		if(current.getCol() < width - 1) return stonePositions[current.getRow()][current.getCol() + 1];
+		if(current.getRow() < height - 1) return stonePositions[current.getRow() + 1][0];
 		else return null;
 	}
 	
+	/**
+	 * Reports whether the group has at least one liberty position
+	 * @param group - the group to check
+	 * @return true if group has a liberty false otherwise
+	 */
+	private boolean isSurrounded(Set<Stone> group)
+	{
+		for(Stone s: group)
+		{
+			Set<Stone> neighbors = getNeighbors(s);
+			for(Stone neighbor: neighbors)
+				if(isLiberty(neighbor))
+					return false;
+		}
+		return true;
+	}
 	
+	public Set<Stone> getCapturedPieces(StoneOwner owner)
+	{
+		Set<Set<Stone>> groups = getGroups(owner);
+		Set<Stone> capturedPieces = new HashSet<>();
+		
+		for(Set<Stone> group: groups)
+		{
+			if(isSurrounded(group))
+				capturedPieces.addAll(group);
+		}
+		
+		return capturedPieces;
+	}
+	
+	private boolean isSelfCapture(StoneOwner owner)
+	{
+		//first check if this moves captures any enemy stones
+		if(getCapturedPieces(owner.getOpposingColour()).size() > 0)
+			return false;
+		
+		//Then check whether it captures any self stones
+		return getCapturedPieces(owner).size() != 0;
+	}
+	
+	
+	//old code
 	private int countLiberties(Set<Stone> group) {
 		Set<Stone> libertyPositions = new HashSet<>();
 		for(Stone stone : group) {
@@ -279,6 +310,7 @@ public class GoBoard {
 			visit_old(row, column - 1, colour, group);
 		}
 	}
+	// end old code
 	
 	public boolean isInBounds(int row, int column) {
 		return row >= 0 && row < height && column >= 0 && column < width ;
