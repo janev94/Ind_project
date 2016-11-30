@@ -36,7 +36,7 @@ public class BoardStateTracker {
 	public boolean isSameAsPrevious(Stone[][] currentState){
 		for(Stone[][] state: states)
 		{
-			if(!Arrays.deepEquals(currentState, state))
+			if(Arrays.deepEquals(currentState, state))
 			{
 				return true;
 			}
@@ -45,5 +45,7 @@ public class BoardStateTracker {
 		return false;
 	}
 	
-	
+	public List<Stone[][]> getStates() {
+		return states;
+	}
 }
