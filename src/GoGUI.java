@@ -27,9 +27,19 @@ public class GoGUI extends Application {
 	@Override
 	public void start(Stage stage) {
 		
+		Group root = drawScene();
+        Scene scene = new Scene(root, SQ_SIDE * (boardWidth + 1), SQ_SIDE * (boardHeight + 1));
+
+        stage.setTitle("Go appl");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+	public Group drawScene() {
 		List<Circle> positions = new ArrayList<>();
 		List<Line> lines = new ArrayList<>();
 		List<Rectangle> rects = new ArrayList<>();
+		
 		
 		
 		for(int y=0;y < boardHeight - 1; y++) {
@@ -72,12 +82,8 @@ public class GoGUI extends Application {
         //root.getChildren().addAll(lines);
         root.getChildren().addAll(rects);
         root.getChildren().addAll(positions);
-        Scene scene = new Scene(root, SQ_SIDE * (boardWidth + 1), SQ_SIDE * (boardHeight + 1));
-
-        stage.setTitle("Go appl");
-        stage.setScene(scene);
-        stage.show();
-    }
+		return root;
+	}
 
 	public static void main(String[] args) {
 		launch(args);
