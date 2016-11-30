@@ -71,17 +71,24 @@ public class GoBoard {
 	 */
 	public boolean isLegalMove(int row, int column, StoneOwner playerPlacing)
 	{
-		if(!isInBounds(row, column))
+		if(!isInBounds(row, column)) {
+//			System.out.println("Out of bounds");
 			return false;
-		if(stonePositions[row][column].getOwner() != StoneOwner.EMPTY)
+		}
+		if(stonePositions[row][column].getOwner() != StoneOwner.EMPTY){
+//			System.out.println("Move on non-empty");
 			return false;
-		if(playerToMove != playerPlacing)
+		}
+		if(playerToMove != playerPlacing){
+//			System.out.println("Wrong color player placing");
 			return false;
+		}
 		
 		stonePositions[row][column].setOwner(playerPlacing);
 		//TODO: check for self capture
 		if(isSelfCapture(playerPlacing))
 		{
+//			System.out.println("Self capture");
 			stonePositions[row][column].setOwner(StoneOwner.EMPTY);
 			return false;
 		}
@@ -105,9 +112,10 @@ public class GoBoard {
 			{
 				stone.setOwner(previousOwners.get(i++));
 			}
+			
 			//change field that was originally moved to to empty
 			stonePositions[row][column].setOwner(StoneOwner.EMPTY);
-			
+//			System.out.println("Ko violation");
 			return false;
 		}
 		//add current position to state tracker
