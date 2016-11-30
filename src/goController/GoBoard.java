@@ -14,6 +14,11 @@ public class GoBoard {
 	private int stonesOnBoard;
 	
 	private Stone[][] stonePositions;
+	private BoardStateTracker previousStates;
+
+	public BoardStateTracker getPreviousStates() {
+		return previousStates;
+	}
 	
 	public GoBoard(int height, int width) {
 		this.width = width;
@@ -22,6 +27,7 @@ public class GoBoard {
 		
 		stonePositions = new Stone[width][height];
 		playerToMove = StoneOwner.BLACK;
+		previousStates = new BoardStateTracker();
 		
 		for(int x = 0; x < width; x++) {
 			for(int y = 0; y < height; y++)
@@ -84,10 +90,29 @@ public class GoBoard {
 		
 		//remove all captured stones, decrease number of stones on board by captured amount
 		Set<Stone> capturedPieces = getCapturedPieces(playerPlacing.getOpposingColour());
+		List<StoneOwner> previousOwners = new ArrayList<>(capturedPieces.size());
 		for(Stone stone: capturedPieces)
 		{
+			previousOwners.add(stone.getOwner());
 			stone.setOwner(StoneOwner.EMPTY);
 		}
+		
+		if(previousStates.isSameAsPrevious(stonePositions))
+		{
+			//TODO: revert state to previous
+			int i=0;
+			for(Stone stone: capturedPieces)
+			{
+				stone.setOwner(previousOwners.get(i++));
+			}
+			//change field that was originally moved to to empty
+			stonePositions[row][column].setOwner(StoneOwner.EMPTY);
+			
+			return false;
+		}
+		//add current position to state tracker
+		//TODO: isolate in state Tracker?
+		previousStates.addState(stonePositions);
 				
 		
 		return true;
