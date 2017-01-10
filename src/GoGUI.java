@@ -185,7 +185,7 @@ public class GoGUI extends Application {
 				 + "--xo---\n"
 				 + "-------\n";
 		
-		String parsedString = koRuleBoardString;
+		String parsedString = selfCaptureBoardString;
 		
 		BoardParser parser = new BoardParserString(parsedString);
 		

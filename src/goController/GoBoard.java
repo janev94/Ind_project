@@ -72,15 +72,15 @@ public class GoBoard {
 	public boolean isLegalMove(int row, int column, StoneOwner playerPlacing)
 	{
 		if(!isInBounds(row, column)) {
-//			System.out.println("Out of bounds");
+			System.out.println("Out of bounds");
 			return false;
 		}
 		if(stonePositions[row][column].getOwner() != StoneOwner.EMPTY){
-//			System.out.println("Move on non-empty");
+			System.out.println("Move on non-empty");
 			return false;
 		}
 		if(playerToMove != playerPlacing){
-//			System.out.println("Wrong color player placing");
+			System.out.println("Wrong color player placing");
 			return false;
 		}
 		
@@ -88,7 +88,7 @@ public class GoBoard {
 		//TODO: check for self capture
 		if(isSelfCapture(playerPlacing))
 		{
-//			System.out.println("Self capture");
+			System.out.println("Self capture");
 			stonePositions[row][column].setOwner(StoneOwner.EMPTY);
 			return false;
 		}
