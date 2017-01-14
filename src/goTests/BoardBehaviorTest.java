@@ -62,7 +62,7 @@ public class BoardBehaviorTest {
 		board = new GoBoard(3, 3);
 		board.setStonePositions(stonePositions);
 		
-		Set<Set<Stone>> groups = board.getGroups(StoneOwner.BLACK);
+		Set<Set<Stone>> groups = board.getGroups(StoneOwner.BLACK, stonePositions);
 		groups.removeIf(x -> x.size() == 0);
 		assertEquals(3, groups.size());
 	}

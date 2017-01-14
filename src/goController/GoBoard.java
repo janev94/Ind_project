@@ -96,7 +96,7 @@ public class GoBoard {
 		
 		temporaryState[row][column].setOwner(playerPlacing);
 		//TODO: check for self capture
-		if(isSelfCapture(playerPlacing))
+		if(isSelfCapture(playerPlacing, temporaryState))
 		{
 			System.out.println("Self capture");
 			//temporaryState[row][column].setOwner(StoneOwner.EMPTY);
@@ -107,7 +107,7 @@ public class GoBoard {
 		//TODO: check for KO
 		
 		//remove all captured stones, decrease number of stones on board by captured amount
-		Set<Stone> capturedPieces = getCapturedPieces(playerPlacing.getOpposingColour());
+		Set<Stone> capturedPieces = getCapturedPieces(playerPlacing.getOpposingColour(), temporaryState);
 		List<StoneOwner> previousOwners = new ArrayList<>(capturedPieces.size());
 		for(Stone stone: capturedPieces)
 		{
@@ -149,20 +149,20 @@ public class GoBoard {
 	 * @param stone
 	 * @return a set of neighbor positions
 	 */
-	public Set<Stone> getNeighbors(Stone stone)
+	public Set<Stone> getNeighbors(Stone stone, Stone[][] tempBoard)
 	{
 		Set<Stone> result = new HashSet<>();
 		if(isInBounds(stone.getRow() + 1, stone.getCol()))
-			result.add(stonePositions[stone.getRow() + 1][stone.getCol()]);
+			result.add(tempBoard[stone.getRow() + 1][stone.getCol()]);
 		
 		if(isInBounds(stone.getRow() - 1, stone.getCol()))
-			result.add(stonePositions[stone.getRow() - 1][stone.getCol()]);
+			result.add(tempBoard[stone.getRow() - 1][stone.getCol()]);
 		
 		if(isInBounds(stone.getRow(), stone.getCol() + 1))
-			result.add(stonePositions[stone.getRow()][stone.getCol() + 1]);
+			result.add(tempBoard[stone.getRow()][stone.getCol() + 1]);
 		
 		if(isInBounds(stone.getRow(), stone.getCol() - 1))
-			result.add(stonePositions[stone.getRow()][stone.getCol() - 1]);
+			result.add(tempBoard[stone.getRow()][stone.getCol() - 1]);
 		
 		return result;
 	}
@@ -171,10 +171,10 @@ public class GoBoard {
 	 * Returns all the groups formed by the player from the given colour in the whole board
 	 * @return
 	 */
-	public Set<Set<Stone>> getGroups(StoneOwner searchedOwner) {
+	public Set<Set<Stone>> getGroups(StoneOwner searchedOwner, Stone[][] tempBoard) {
 		Set<Stone> visited = new HashSet<>();
 		Set<Set<Stone>> groups = new HashSet<>();
-		Set<Set<Stone>> result = iterateBoard(0, 0, visited, groups, searchedOwner);
+		Set<Set<Stone>> result = iterateBoard(0, 0, visited, groups, searchedOwner, tempBoard);
 		
 		return result;
 	}
@@ -183,21 +183,23 @@ public class GoBoard {
 	/**
 	 * Find the group where this stone belongs to
 	 * @param stone
+	 * @param tempBoard 
 	 * @return
 	 */
-	public Set<Stone> findGroup(Stone stone) {
+	public Set<Stone> findGroup(Stone stone, Stone[][] tempBoard) {
 		List<Stone> toVisit = new ArrayList<>();
 		Set<Stone> visited = new HashSet<>();
 		Set<Stone> group = new HashSet<>();
 		
 		toVisit.add(stone);
 		
-		Set<Stone> result = visit(toVisit, visited, group, stone.getOwner());
+		Set<Stone> result = visit(toVisit, visited, group, stone.getOwner(), tempBoard);
 		
 		return result;
 	}
 	
-	private Set<Stone> visit(List<Stone> toVisit, Set<Stone> visited, Set<Stone> group, StoneOwner searchedOwner)
+	private Set<Stone> visit(List<Stone> toVisit, Set<Stone> visited, Set<Stone> group
+			, StoneOwner searchedOwner, Stone[][] tempBoard)
 	{
 		if(toVisit.isEmpty())
 			return group;
@@ -205,7 +207,7 @@ public class GoBoard {
 		Stone current = toVisit.remove(0);
 		visited.add(current);
 		Set<Stone> toVisitNeighbors = new HashSet<>();
-		Set<Stone> neighbors = getNeighbors(current);
+		Set<Stone> neighbors = getNeighbors(current, tempBoard);
 		for(Stone neighbor: neighbors)
 		{
 			if(!visited.contains(neighbor) && neighbor.getOwner() == searchedOwner)
@@ -217,16 +219,17 @@ public class GoBoard {
 		visited.add(current);
 		group.add(current);
 		
-		return visit(toVisit, visited, group, searchedOwner);
+		return visit(toVisit, visited, group, searchedOwner, tempBoard);
 	}
 	
 	
-	public Set<Set<Stone>> iterateBoard(int startHeight, int startWidth, Set<Stone> visited, Set<Set<Stone>> groups, StoneOwner searchedOwner)
+	public Set<Set<Stone>> iterateBoard(int startHeight, int startWidth, Set<Stone> visited, Set<Set<Stone>> groups
+			, StoneOwner searchedOwner, Stone[][] tempBoard)
 	{
-		Stone currentStone = stonePositions[startHeight][startWidth];
+		Stone currentStone = tempBoard[startHeight][startWidth];
 		Set<Stone> group;
 		if(!visited.contains(currentStone) && currentStone.getOwner() == searchedOwner)
-			group = findGroup(currentStone);
+			group = findGroup(currentStone, tempBoard);
 		else
 			group = new HashSet<>();
 		
@@ -237,7 +240,8 @@ public class GoBoard {
 			//update collections
 			visited.addAll(group);
 			groups.add(group);
-			return iterateBoard(nextStone.getRow(), nextStone.getCol(), visited, groups, searchedOwner);
+			return iterateBoard(nextStone.getRow(), nextStone.getCol(), visited, groups
+					, searchedOwner, tempBoard);
 		}
 		else{
 			groups.add(group);
@@ -257,11 +261,11 @@ public class GoBoard {
 	 * @param group - the group to check
 	 * @return true if group has a liberty false otherwise
 	 */
-	private boolean isSurrounded(Set<Stone> group)
+	private boolean isSurrounded(Set<Stone> group, Stone[][] tempBoard)
 	{
 		for(Stone s: group)
 		{
-			Set<Stone> neighbors = getNeighbors(s);
+			Set<Stone> neighbors = getNeighbors(s, tempBoard);
 			for(Stone neighbor: neighbors)
 				if(isLiberty(neighbor))
 					return false;
@@ -269,28 +273,28 @@ public class GoBoard {
 		return true;
 	}
 	
-	public Set<Stone> getCapturedPieces(StoneOwner owner)
+	public Set<Stone> getCapturedPieces(StoneOwner owner, Stone[][] tempBoard)
 	{
-		Set<Set<Stone>> groups = getGroups(owner);
+		Set<Set<Stone>> groups = getGroups(owner, tempBoard);
 		Set<Stone> capturedPieces = new HashSet<>();
 		
 		for(Set<Stone> group: groups)
 		{
-			if(isSurrounded(group))
+			if(isSurrounded(group, tempBoard))
 				capturedPieces.addAll(group);
 		}
 		
 		return capturedPieces;
 	}
 	
-	private boolean isSelfCapture(StoneOwner owner)
+	private boolean isSelfCapture(StoneOwner owner, Stone[][] tempBoard)
 	{
 		//first check if this moves captures any enemy stones
-		if(getCapturedPieces(owner.getOpposingColour()).size() > 0)
+		if(getCapturedPieces(owner.getOpposingColour(), tempBoard).size() > 0)
 			return false;
 		
 		//Then check whether it captures any self stones
-		return getCapturedPieces(owner).size() != 0;
+		return getCapturedPieces(owner, tempBoard).size() != 0;
 	}
 	
 	

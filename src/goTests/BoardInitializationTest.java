@@ -92,7 +92,7 @@ public class BoardInitializationTest {
 	@Test
 	public void testGetNeighboursInBoard()
 	{
-		Set<Stone> neighbors = board.getNeighbors(stonePositions[1][1]);
+		Set<Stone> neighbors = board.getNeighbors(stonePositions[1][1], stonePositions);
 		assertEquals(4, neighbors.size());
 		
 		int blackNeighbors = 0;
@@ -108,7 +108,7 @@ public class BoardInitializationTest {
 	public void testGetNeighborsInCorner()
 	{
 		//should have only 2 neighbor cells
-		Set<Stone> neigbors = board.getNeighbors(stonePositions[height - 1][width -1]);
+		Set<Stone> neigbors = board.getNeighbors(stonePositions[height - 1][width -1], stonePositions);
 		assertEquals(2, neigbors.size());
 	}
 	
@@ -116,7 +116,7 @@ public class BoardInitializationTest {
 	public void testGetNeighborsAtEdge()
 	{
 		//edge stones should have exactly 3 neighbors, unless corner stones
-		Set<Stone> neigbors = board.getNeighbors(stonePositions[height - 1][1]);
+		Set<Stone> neigbors = board.getNeighbors(stonePositions[height - 1][1], stonePositions);
 		assertEquals(3, neigbors.size());
 	}
 }
