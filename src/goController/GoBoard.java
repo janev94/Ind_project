@@ -69,28 +69,39 @@ public class GoBoard {
 	 * @param playerPlacing
 	 * @return
 	 */
-	public boolean isLegalMove(int row, int column, StoneOwner playerPlacing)
+	public LegalMoveObj isLegalMove(int row, int column, StoneOwner playerPlacing)
 	{
+		//create Object to keep track of move's validity and state
+		LegalMoveObj result = new LegalMoveObj();
+		
+		//copy current board state
+		Stone[][] temporaryState = BoardStateTracker.deepCopyState(stonePositions);
+		
 		if(!isInBounds(row, column)) {
 			System.out.println("Out of bounds");
-			return false;
+			result.setLegal(false);
+			return result;
 		}
-		if(stonePositions[row][column].getOwner() != StoneOwner.EMPTY){
+		
+		if(temporaryState[row][column].getOwner() != StoneOwner.EMPTY){
 			System.out.println("Move on non-empty");
-			return false;
+			result.setLegal(false);
+			return result;
 		}
 		if(playerToMove != playerPlacing){
 			System.out.println("Wrong color player placing");
-			return false;
+			result.setLegal(false);
+			return result;
 		}
 		
-		stonePositions[row][column].setOwner(playerPlacing);
+		temporaryState[row][column].setOwner(playerPlacing);
 		//TODO: check for self capture
 		if(isSelfCapture(playerPlacing))
 		{
 			System.out.println("Self capture");
-			stonePositions[row][column].setOwner(StoneOwner.EMPTY);
-			return false;
+			//temporaryState[row][column].setOwner(StoneOwner.EMPTY);
+			result.setLegal(false);
+			return result;
 		}
 		
 		//TODO: check for KO
@@ -104,7 +115,7 @@ public class GoBoard {
 			stone.setOwner(StoneOwner.EMPTY);
 		}
 		
-		if(previousStates.isSameAsPrevious(stonePositions))
+		if(previousStates.isSameAsPrevious(temporaryState))
 		{
 			//TODO: revert state to previous
 			int i=0;
@@ -114,16 +125,23 @@ public class GoBoard {
 			}
 			
 			//change field that was originally moved to to empty
-			stonePositions[row][column].setOwner(StoneOwner.EMPTY);
-//			System.out.println("Ko violation");
-			return false;
+			//stonePositions[row][column].setOwner(StoneOwner.EMPTY);
+			
+			System.out.println("Ko violation");
+			
+			result.setLegal(false);
+			return result;
 		}
+		
 		//add current position to state tracker
 		//TODO: isolate in state Tracker?
-		previousStates.addState(stonePositions);
-				
 		
-		return true;
+		//do not add state to tracker yet, only add when move is made
+		//previousStates.addState(temporaryState);
+
+		result.setStonePositions(temporaryState);
+		result.setLegal(true);
+		return result;
 	}
 
 	/**
@@ -350,8 +368,29 @@ public class GoBoard {
 	}
 
 
-	public void playMove(int x, int y, StoneOwner owner)
+	/**
+	 * Function that tries playing the move
+	 *  at row - row and col - col for player - player placing. Returns true if
+	 *  move was played and false otherwise
+	 * @param row - the index of the row to play at(starting from 0)
+	 * @param column - the index of the col to play at(starting from 0)
+	 * @param playerPlacing - the colour of the player to move
+	 * 
+	 * @return true if move was played false otherwise
+	 */
+	public boolean playMove(int row, int column, StoneOwner playerPlacing)
 	{
 		//TODO: fill in move logic
+		LegalMoveObj legalMoveObj = isLegalMove(row, column, playerPlacing);
+		
+		if(!legalMoveObj.isLegal())
+			return false;
+		
+		//if move is legal, add temporary state to played states
+		previousStates.addState(legalMoveObj.getStonePositions());
+		
+		//apply the move
+		stonePositions = legalMoveObj.getStonePositions();
+		return true;
 	}
 }

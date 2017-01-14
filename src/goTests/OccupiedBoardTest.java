@@ -58,7 +58,7 @@ public class OccupiedBoardTest {
 		board = new GoBoard(5, 6);
 		board.setStonePositions(stonePositions);
 		
-		assertFalse(board.isLegalMove(0, 1, StoneOwner.BLACK));
+		assertFalse(board.isLegalMove(0, 1, StoneOwner.BLACK).isLegal());
 	}
 	
 	@Test
@@ -70,7 +70,8 @@ public class OccupiedBoardTest {
 		board.setPlayerToMove(StoneOwner.WHITE);
 		
 		// causes white to have no liberties
-		boolean isLegal = board.isLegalMove(1, 3, StoneOwner.WHITE); 
+		boolean isLegal = board.playMove(1, 3, StoneOwner.WHITE);
+		System.out.println("Is legal: " + isLegal);
 		assertFalse(isLegal); 
 	}
 	
@@ -83,13 +84,13 @@ public class OccupiedBoardTest {
 		board.getPreviousStates().addState(stonePositions);
 		board.setPlayerToMove(StoneOwner.WHITE);
 		
-		boolean isLegal = board.isLegalMove(2, 2, StoneOwner.WHITE);
+		boolean isLegal = board.playMove(2, 2, StoneOwner.WHITE);
 		assertTrue(isLegal);
 		//set next player to move
 		board.setPlayerToMove(StoneOwner.BLACK);
 		StoneOwner emptyOwner = stonePositions[2][3].getOwner();
 		
-		assertFalse("Not detecting co Rule", board.isLegalMove(2, 3, StoneOwner.BLACK));
+		assertFalse("Not detecting ko Rule", board.playMove(2, 3, StoneOwner.BLACK));
 		assertEquals("Board changed on illegal move", emptyOwner, stonePositions[2][3].getOwner());
 	}
 	

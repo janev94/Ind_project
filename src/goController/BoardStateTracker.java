@@ -48,4 +48,21 @@ public class BoardStateTracker {
 	public List<Stone[][]> getStates() {
 		return states;
 	}
+	
+	/**
+	 * Deep copy the current state
+	 * @param currentState - the state to be added
+	 */
+	public static Stone[][] deepCopyState(Stone[][] currentState) {
+
+		Stone[][] currentStateCopy = new Stone[currentState.length][currentState[0].length];
+		for(int i = 0; i < currentState.length; i++){
+			for(int j = 0; j < currentState[i].length; j++)
+			{
+				currentStateCopy[i][j] = new Stone(currentState[i][j]);
+			}
+		}
+		
+		return currentStateCopy;
+	}
 }

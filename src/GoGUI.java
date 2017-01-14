@@ -89,7 +89,8 @@ public class GoGUI extends Application {
 					StoneGUI st = (StoneGUI) e.getSource();
 					System.out.println("Row:" + st.getStone().getRow() + " Col: " + st.getStone().getCol());
 					
-					if(board.isLegalMove(st.getStone().getRow(), st.getStone().getCol(), playerToMove))
+					//Play move returns true if current move is possible
+					if(board.playMove(st.getStone().getRow(), st.getStone().getCol(), playerToMove))
 					{
 						//st.setFill(turn?Color.BLACK: Color.WHITESMOKE);
 						renderBoard();
@@ -111,6 +112,9 @@ public class GoGUI extends Application {
 				positions.add(stone);
 			}
 		}
+		
+		//check for legal moves
+		//checkLegals();
 		
         Circle circ = new Circle(40, 40, 30);
 
@@ -140,6 +144,7 @@ public class GoGUI extends Application {
 				positions.get(y*boardWidth + x).setFill(paint);
 			}
 		}
+		
 	}
 	
 	
@@ -153,18 +158,25 @@ public class GoGUI extends Application {
 //					paint = Color.WHITESMOKE;
 			
 				StoneGUI st = (StoneGUI) positions.get(y*boardWidth + x);
+				
+				//if owner is not empty move is illegal by default, skip colouring
+				if(st.getStone().getOwner() != StoneOwner.EMPTY)
+					continue;
+				
 				Paint paint;
-				if(board.isLegalMove(st.getStone().getRow(), st.getStone().getCol(), playerToMove)) {
+				if(board.isLegalMove(st.getStone().getRow(), st.getStone().getCol(), playerToMove).isLegal()) {
 					paint = Color.LIMEGREEN;
 				}
 				else 
 					paint = Color.RED;
 				
-				StoneGUI stone = new StoneGUI(stonePositions[y][x], (x+1) * SQ_SIDE + RADIUS,
-						(y+1) * SQ_SIDE, RADIUS, Color.TRANSPARENT);
+//				StoneGUI stone = new StoneGUI(stonePositions[y][x], (x+1) * SQ_SIDE + RADIUS,
+//						(y+1) * SQ_SIDE, RADIUS, Color.TRANSPARENT);
 				
-				stone.setStrokeWidth(5);
-				stone.setStroke(paint);
+				st.setFill(paint);
+				
+//				stone.setStrokeWidth(5);
+//				stone.setStroke(paint);
 			}
 		}
 	}

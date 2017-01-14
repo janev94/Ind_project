@@ -10,7 +10,9 @@ import org.junit.Test;
 
 import goController.BoardParser;
 import goController.BoardParserString;
+import goController.BoardStateTracker;
 import goController.GoBoard;
+import goController.LegalMoveObj;
 import goController.Stone;
 import goController.StoneOwner;
 
@@ -64,4 +66,35 @@ public class BoardBehaviorTest {
 		groups.removeIf(x -> x.size() == 0);
 		assertEquals(3, groups.size());
 	}
+	
+	@Test
+	public void testIsLegalKeepsSameState()
+	{
+		BoardParser parser = new BoardParserString(simpleBoardString);
+		stonePositions = parser.parse();
+		
+		board = new GoBoard(height, width);
+		board.setStonePositions(stonePositions);
+
+//		BoardStateTracker states = new BoardStateTracker();
+//		states.addState(stonePositions);
+		BoardStateTracker states = board.getPreviousStates();
+		states.addState(stonePositions);
+		
+		board.setPlayerToMove(StoneOwner.BLACK);
+		
+		StoneOwner oldOwner = board.getStonePositions()[1][1].getOwner();
+		
+		LegalMoveObj legalObj = board.isLegalMove(1, 1, StoneOwner.BLACK);
+		assertTrue(legalObj.isLegal());
+		
+		assertEquals(oldOwner, board.getStonePositions()[1][1].getOwner());
+		
+//		System.out.println(states.getStates().size());
+		
+//		System.out.println(legalObj.isLegal());
+//		System.out.println("before: " + states.getStates().get(0)[1][1].getOwner());
+//		System.out.println("After: " + states.getStates().get(1)[1][1].getOwner());
+	}
+
 }

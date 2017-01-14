@@ -39,23 +39,23 @@ public class EmptyBoardTest {
 	
 	@Test
 	public void testMoveInEmptyBoardForBlack(){
-		assertEquals(board.isLegalMove(0, 0, StoneOwner.BLACK),
+		assertEquals(board.isLegalMove(0, 0, StoneOwner.BLACK).isLegal(),
 				board.getPlayerToMove() == StoneOwner.BLACK);
 	}
 	
 	@Test
 	public void testMoveInEmptyBoardForWhite() {
-		assertEquals(board.isLegalMove(0, 0, StoneOwner.WHITE), 
+		assertEquals(board.isLegalMove(0, 0, StoneOwner.WHITE).isLegal(), 
 				board.getPlayerToMove() == StoneOwner.WHITE);
 	}
 	
 	@Test
 	public void testMoveOutsideBoard(){
-		assertFalse(board.isLegalMove(-1, 0, StoneOwner.BLACK));
-		assertFalse(board.isLegalMove(3, -1, StoneOwner.BLACK));
-		assertFalse(board.isLegalMove(5, 2, StoneOwner.BLACK));
-		assertFalse(board.isLegalMove(2, 5, StoneOwner.BLACK));
+		assertFalse(board.isLegalMove(-1, 0, StoneOwner.BLACK).isLegal());
+		assertFalse(board.isLegalMove(3, -1, StoneOwner.BLACK).isLegal());
+		assertFalse(board.isLegalMove(5, 2, StoneOwner.BLACK).isLegal());
+		assertFalse(board.isLegalMove(2, 5, StoneOwner.BLACK).isLegal());
 		
-		assertFalse(board.isLegalMove(10, 3, StoneOwner.BLACK));
+		assertFalse(board.isLegalMove(10, 3, StoneOwner.BLACK).isLegal());
 	}
 }
