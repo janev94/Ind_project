@@ -92,8 +92,8 @@ public class GoGUI extends Application {
 					//Play move returns true if current move is possible
 					if(board.playMove(st.getStone().getRow(), st.getStone().getCol(), playerToMove))
 					{
-						//st.setFill(turn?Color.BLACK: Color.WHITESMOKE);
-						renderBoard();
+						st.setFill(turn?Color.BLACK: Color.WHITESMOKE);
+						//renderBoard();
 						playerToMove = playerToMove.getOpposingColour();
 						board.setPlayerToMove(playerToMove);
 						label.setText("Player to move: " + playerToMove);
