@@ -22,7 +22,7 @@ import javafx.stage.Stage;
 
 public class GoGUI extends Application {
 
-	Stone[][] stonePositions;
+	Stone[][] initialStonePositions;
 	GoBoard board;
 	
 	int boardWidth = 9;
@@ -72,14 +72,14 @@ public class GoGUI extends Application {
 		for(int y=0; y < boardHeight; y++) {
 			for(int x=0; x < boardWidth; x++) {
 				Paint paint = Color.TRANSPARENT;
-				if(stonePositions[y][x].getOwner() == StoneOwner.BLACK)
+				if(initialStonePositions[y][x].getOwner() == StoneOwner.BLACK)
 					paint = Color.BLACK;
-				else if(stonePositions[y][x].getOwner() == StoneOwner.WHITE)
+				else if(initialStonePositions[y][x].getOwner() == StoneOwner.WHITE)
 					paint = Color.WHITESMOKE;
 					
 //				Circle circ = new Circle((x+1) * SQ_SIDE + RADIUS, (y+1) * SQ_SIDE,
 //						RADIUS, paint);
-				StoneGUI stone = new StoneGUI(stonePositions[y][x], (x+1) * SQ_SIDE + RADIUS,
+				StoneGUI stone = new StoneGUI(initialStonePositions[y][x], (x+1) * SQ_SIDE + RADIUS,
 						(y+1) * SQ_SIDE, RADIUS, paint);
 				
 				stone.setStrokeWidth(1);
@@ -92,8 +92,17 @@ public class GoGUI extends Application {
 					//Play move returns true if current move is possible
 					if(board.playMove(st.getStone().getRow(), st.getStone().getCol(), playerToMove))
 					{
-						st.setFill(turn?Color.BLACK: Color.WHITESMOKE);
-						//renderBoard();
+						
+						/* print the formatted stones to the standard out(console)*/
+						
+//						for(Stone[] row: board.getStonePositions())
+//						{
+//							for(Stone s: row)
+//								System.out.print(s + " ");
+//							System.out.println();
+//						}
+
+						renderBoard();
 						playerToMove = playerToMove.getOpposingColour();
 						board.setPlayerToMove(playerToMove);
 						label.setText("Player to move: " + playerToMove);
@@ -133,6 +142,7 @@ public class GoGUI extends Application {
 	
 	
 	private void renderBoard() {
+		Stone[][] stonePositions = board.getStonePositions();
 		for(int y=0; y < boardHeight; y++) {
 			for(int x=0; x < boardWidth; x++) {
 				Paint paint = Color.TRANSPARENT;
@@ -197,6 +207,13 @@ public class GoGUI extends Application {
 				 + "--xo---\n"
 				 + "-------\n";
 		
+		String cornerCaptureBoardString = 
+				 "-------\n"
+			   + "-------\n"
+			   + "------o\n"
+			   + "-----ox\n"
+		       + "----ox-\n";
+		
 		String parsedString = selfCaptureBoardString;
 		
 		BoardParser parser = new BoardParserString(parsedString);
@@ -208,11 +225,11 @@ public class GoGUI extends Application {
 		boardWidth = rows[0].length();
 		boardHeight = rows.length;
 		
-		stonePositions = parser.parse();
+		initialStonePositions = parser.parse();
 		board = new GoBoard(boardHeight, boardWidth);
 		
-		board.setStonePositions(stonePositions);
-		board.getPreviousStates().addState(stonePositions);
+		board.setStonePositions(initialStonePositions);
+		board.getPreviousStates().addState(initialStonePositions);
 		playerToMove = StoneOwner.WHITE;
 		board.setPlayerToMove(playerToMove);
 	}
