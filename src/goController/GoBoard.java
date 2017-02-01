@@ -5,11 +5,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+
 public class GoBoard {
 
 	private int width;
 	private int height;
 	private StoneOwner playerToMove;
+	private GoGoal goal;
 	private BoardParser parser;
 	private int stonesOnBoard;
 	
@@ -58,6 +62,22 @@ public class GoBoard {
 	
 	public void setPlayerToMove(StoneOwner playerToMove) {
 		this.playerToMove = playerToMove;
+	}
+	
+	public void setGoal(GoGoal goal) {
+		this.goal = goal;
+	}
+	
+	public boolean isGoalReached() {
+		boolean result = false;
+		
+		if(goal.getGoal() == GoGoalEnum.KILL)
+		{
+			result = stonePositions[goal.getHeight()][goal.getWidth()]
+					.getOwner() == StoneOwner.EMPTY;
+		}
+		
+		return result;
 	}
 	
 	/**
@@ -397,4 +417,26 @@ public class GoBoard {
 		stonePositions = legalMoveObj.getStonePositions();
 		return true;
 	}
+	
+	
+	public void playAIMove(StoneOwner playerToMove)
+	{
+		//first find a legal move
+		
+		for(int y=0; y < height; y++) {
+
+			for(int x=0; x < width; x++) {
+			
+				if(isLegalMove(y, x, playerToMove).isLegal()) {
+					//legal move found
+					playMove(y, x, playerToMove);
+					return;
+				}
+				
+			}
+		}
+		
+	}
+
+
 }

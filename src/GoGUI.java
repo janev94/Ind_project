@@ -3,15 +3,24 @@ import java.util.List;
 
 import goController.BoardParser;
 import goController.BoardParserString;
+import goController.FileBoardParser;
 import goController.GoBoard;
+import goController.GoPlayer;
 import goController.Stone;
 import goController.StoneOwner;
 import javafx.application.Application;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
@@ -25,13 +34,17 @@ public class GoGUI extends Application {
 	Stone[][] initialStonePositions;
 	GoBoard board;
 	
-	int boardWidth = 9;
-	int boardHeight = 5;
+	private int boardWidth;
+	private int boardHeight;
 	
 	private int SQ_SIDE = 40;
 	private int RADIUS = 10;
+	private int vPadding = 100;
+	private int hPadding = 50;
 
 	private boolean turn = false;
+	private GoPlayer[] players;
+	
 	private StoneOwner playerToMove;
 
 	private List<Circle> positions;
@@ -40,13 +53,54 @@ public class GoGUI extends Application {
 	@Override
 	public void start(Stage stage) {
 		
+		players = new GoPlayer[2];
+		
+		players[0] = GoPlayer.ARTIFICIAL;
+		players[1] = GoPlayer.ARTIFICIAL;
+		
 		Group root = drawScene();
-        Scene scene = new Scene(root, SQ_SIDE * (boardWidth + 1), SQ_SIDE * (boardHeight + 1));
+        Scene scene = new Scene(root, hPadding + SQ_SIDE * (boardWidth), vPadding + SQ_SIDE * (boardHeight));
 
         stage.setTitle("Go appl");
         stage.setScene(scene);
         stage.show();
+        
+        while(!board.isGoalReached())
+        	checkAndMoveAI();
     }
+
+	private void checkAndMoveAI() {
+		
+		if(players[StoneOwner.valueOf(playerToMove.toString()).ordinal()] == GoPlayer.ARTIFICIAL)
+        {
+			if(countLegals() == 0)
+        		return;
+			
+			board.playAIMove(playerToMove);
+        	playerToMove = playerToMove.getOpposingColour();
+        	board.setPlayerToMove(playerToMove);
+        	label.setText("Player to move: " + playerToMove);
+        	renderBoard();
+        }
+	}
+	
+	private int countLegals()
+	{
+		int legals = 0;
+		Stone[][] stonePositions = board.getStonePositions();
+		for(int y=0; y < boardHeight; y++) {
+			for(int x=0; x < boardWidth; x++) {
+		
+				StoneGUI st = (StoneGUI) positions.get(y*boardWidth + x);
+				
+				if(board.isLegalMove(st.getStone().getRow(), st.getStone().getCol(), playerToMove).isLegal()) {
+					legals++;
+				}
+			}
+		}
+		
+		return legals;
+	}
 
 	public Group drawScene() {
 		positions = new ArrayList<>();
@@ -56,10 +110,11 @@ public class GoGUI extends Application {
 		setUpBoard();
 		
 		label = new Label("Player to move: " + playerToMove.toString());
-		
+		label.setStyle("-fx-padding: 50 0 0 0;");
+
 		for(int y=0;y < boardHeight - 1; y++) {
 			for( int x=0;x < boardWidth - 1; x++) {
-				Rectangle rect = new Rectangle(x * SQ_SIDE + (SQ_SIDE + RADIUS), y * SQ_SIDE + SQ_SIDE, SQ_SIDE, SQ_SIDE);
+				Rectangle rect = new Rectangle(x * SQ_SIDE + hPadding, y * SQ_SIDE + vPadding, SQ_SIDE, SQ_SIDE);
 				rect.setFill(Color.BURLYWOOD);
 				rect.setStrokeWidth(1);
 				rect.setStroke(Color.BLACK);
@@ -79,8 +134,8 @@ public class GoGUI extends Application {
 					
 //				Circle circ = new Circle((x+1) * SQ_SIDE + RADIUS, (y+1) * SQ_SIDE,
 //						RADIUS, paint);
-				StoneGUI stone = new StoneGUI(initialStonePositions[y][x], (x+1) * SQ_SIDE + RADIUS,
-						(y+1) * SQ_SIDE, RADIUS, paint);
+				StoneGUI stone = new StoneGUI(initialStonePositions[y][x], hPadding + (x) * SQ_SIDE,
+						vPadding + y * SQ_SIDE, RADIUS, paint);
 				
 				stone.setStrokeWidth(1);
 				stone.setStroke(Color.BLACK);
@@ -102,10 +157,11 @@ public class GoGUI extends Application {
 //							System.out.println();
 //						}
 
-						renderBoard();
+						
 						playerToMove = playerToMove.getOpposingColour();
 						board.setPlayerToMove(playerToMove);
 						label.setText("Player to move: " + playerToMove);
+						renderBoard();
 						turn = !turn;
 					} else
 					{
@@ -130,12 +186,42 @@ public class GoGUI extends Application {
         circ.setFill(Color.TRANSPARENT);
         circ.setStrokeWidth(3);
         circ.setStroke(Color.BLACK);
+        
+        GridPane grid = new GridPane();
+        
         Group root = new Group();
 //        root.getChildren().addAll(positions);
         //root.getChildren().addAll(lines);
+
         root.getChildren().addAll(rects);
         root.getChildren().addAll(positions);
         root.getChildren().add(label);
+
+        MenuBar menuBar = new MenuBar();
+        Menu actionMenu = new Menu("Action");
+        MenuItem checkLegalsItem = new MenuItem("Check legal moves");
+        MenuItem moveAI = new MenuItem("Make AI move");
+        
+        checkLegalsItem.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				checkLegals();
+			}
+		});
+        
+        moveAI.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				checkAndMoveAI();
+			}
+		});
+        
+
+        actionMenu.getItems().addAll(checkLegalsItem, moveAI);
+        menuBar.getMenus().add(actionMenu);
+        root.getChildren().add(menuBar);
+        
+        
 		return root;
 	}
 
@@ -155,22 +241,23 @@ public class GoGUI extends Application {
 			}
 		}
 		
+		board.isGoalReached();
+		//checkAndMoveAI();
 	}
 	
 	
 	private void checkLegals() {
+		
+		Stone[][] stonePositions = board.getStonePositions();
 		for(int y=0; y < boardHeight; y++) {
 			for(int x=0; x < boardWidth; x++) {
-//				Paint paint = Color.TRANSPARENT;
-//				if(stonePositions[y][x].getOwner() == StoneOwner.BLACK)
-//					paint = Color.BLACK;
-//				else if(stonePositions[y][x].getOwner() == StoneOwner.WHITE)
-//					paint = Color.WHITESMOKE;
-			
+
 				StoneGUI st = (StoneGUI) positions.get(y*boardWidth + x);
 				
+				
 				//if owner is not empty move is illegal by default, skip colouring
-				if(st.getStone().getOwner() != StoneOwner.EMPTY)
+				if(stonePositions[st.getStone().getRow()][st.getStone().getCol()]
+						.getOwner() != StoneOwner.EMPTY)
 					continue;
 				
 				Paint paint;
@@ -218,19 +305,28 @@ public class GoGUI extends Application {
 		
 		BoardParser parser = new BoardParserString(parsedString);
 		
+		FileBoardParser fileParser = new FileBoardParser("kill_easy.gpr");
+		fileParser.parse();
+		
 		String[] rows = parsedString.split("\n");
 		System.out.println(rows.length);
 		System.out.println(rows[0].length());
 		
-		boardWidth = rows[0].length();
-		boardHeight = rows.length;
+		//boardWidth = rows[0].length();
+		//boardHeight = rows.length;
 		
-		initialStonePositions = parser.parse();
+		//TODO: make parse more generic
+		initialStonePositions = fileParser.parse();
+		boardWidth = fileParser.getWidth();
+		boardHeight = fileParser.getHeight();
+		
 		board = new GoBoard(boardHeight, boardWidth);
+
+		board.setGoal(fileParser.getGoal());
 		
 		board.setStonePositions(initialStonePositions);
 		board.getPreviousStates().addState(initialStonePositions);
-		playerToMove = StoneOwner.WHITE;
+		playerToMove = StoneOwner.BLACK;
 		board.setPlayerToMove(playerToMove);
 	}
 

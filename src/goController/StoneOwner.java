@@ -1,7 +1,7 @@
 package goController;
 
 public enum StoneOwner {
-	EMPTY, BLACK, WHITE;
+	BLACK, WHITE, EMPTY;
 	
 	public StoneOwner getOpposingColour() {
 		if (this == StoneOwner.BLACK)
