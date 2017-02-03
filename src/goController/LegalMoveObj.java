@@ -1,9 +1,12 @@
 package goController;
 
+import java.util.Set;
+
 public class LegalMoveObj {
 
 	private boolean isLegal;
 	private Stone[][] stonePositions;
+	private Set<Stone> capturedPieces;
 
 	public LegalMoveObj() {
 		isLegal = false;
@@ -43,4 +46,13 @@ public class LegalMoveObj {
 		
 		stonePositions = board.getStonePositions();
 	}
+
+	public void setCapturedPieces(Set<Stone> capturedPieces) {
+		this.capturedPieces = capturedPieces;
+	}
+	
+	public Set<Stone> getCapturedPieces() {
+		return capturedPieces;
+	}
+
 }
