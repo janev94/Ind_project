@@ -160,7 +160,9 @@ public class GoBoard {
 		//previousStates.addState(temporaryState);
 
 		result.setStonePositions(temporaryState);
+		result.setCapturedPieces(capturedPieces);
 		result.setLegal(true);
+		
 		return result;
 	}
 
@@ -422,20 +424,32 @@ public class GoBoard {
 	public void playAIMove(StoneOwner playerToMove)
 	{
 		//first find a legal move
+		List<Coordinates> coords = new ArrayList<>();
+		List<Double> moveValues = new ArrayList<>();
 		
 		for(int y=0; y < height; y++) {
 
 			for(int x=0; x < width; x++) {
-			
-				if(isLegalMove(y, x, playerToMove).isLegal()) {
-					//legal move found
-					playMove(y, x, playerToMove);
-					return;
+				LegalMoveObj option = isLegalMove(y, x, playerToMove);
+				if(option.isLegal()) {
+					coords.add(new Coordinates(x, y));
+					moveValues.add((double) option.getCapturedPieces().size());
 				}
-				
 			}
 		}
 		
+		int idx = -1;
+		double maxValue = Double.NEGATIVE_INFINITY;
+		for(int i=0; i < moveValues.size(); i++) {
+			if(maxValue < moveValues.get(i))
+			{
+				maxValue = moveValues.get(i);
+				idx = i;
+			}
+		}
+		
+		if(idx != -1)
+			playMove(coords.get(idx).y, coords.get(idx).x, playerToMove);
 	}
 
 
