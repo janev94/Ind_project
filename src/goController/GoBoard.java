@@ -41,6 +41,17 @@ public class GoBoard {
 		}
 	}
 	
+	public GoBoard(GoBoard board) {
+		this.width = board.width;
+		this.height = board.height;
+		this.goal = board.goal;
+
+		this.stonePositions = BoardStateTracker.deepCopyState(board.getStonePositions());
+		this.playerToMove = board.playerToMove;
+		this.previousStates = new BoardStateTracker(board.previousStates);
+		
+	}
+	
 	
 	public Stone[][] getStonePositions() {
 		return stonePositions;
@@ -89,7 +100,7 @@ public class GoBoard {
 	 * @param playerPlacing
 	 * @return
 	 */
-	public LegalMoveObj isLegalMove(int row, int column, StoneOwner playerPlacing)
+	public LegalMoveObj isLegalMove(int row, int column, StoneOwner playerPlacing, boolean verbose)
 	{
 		//create Object to keep track of move's validity and state
 		LegalMoveObj result = new LegalMoveObj();
@@ -98,18 +109,21 @@ public class GoBoard {
 		Stone[][] temporaryState = BoardStateTracker.deepCopyState(stonePositions);
 		
 		if(!isInBounds(row, column)) {
-			System.out.println("Out of bounds");
+			if(verbose)
+				System.out.println("Out of bounds");
 			result.setLegal(false);
 			return result;
 		}
 		
 		if(temporaryState[row][column].getOwner() != StoneOwner.EMPTY){
-			System.out.println("Move on non-empty");
+			if(verbose)
+				System.out.println("Move on non-empty");
 			result.setLegal(false);
 			return result;
 		}
 		if(playerToMove != playerPlacing){
-			System.out.println("Wrong color player placing");
+			if(verbose)
+				System.out.println("Wrong color player placing");
 			result.setLegal(false);
 			return result;
 		}
@@ -118,7 +132,8 @@ public class GoBoard {
 		//TODO: check for self capture
 		if(isSelfCapture(playerPlacing, temporaryState))
 		{
-			System.out.println("Self capture");
+			if(verbose)
+				System.out.println("Self capture");
 			//temporaryState[row][column].setOwner(StoneOwner.EMPTY);
 			result.setLegal(false);
 			return result;
@@ -147,7 +162,8 @@ public class GoBoard {
 			//change field that was originally moved to to empty
 			//stonePositions[row][column].setOwner(StoneOwner.EMPTY);
 			
-			System.out.println("Ko violation");
+			if(verbose)
+				System.out.println("Ko violation");
 			
 			result.setLegal(false);
 			return result;
@@ -341,7 +357,7 @@ public class GoBoard {
 	private boolean isLiberty(Stone stone) {
 		if(!isInBounds(stone.getRow(), stone.getCol()))
 			return false;
-		return stone.getOwner() == StoneOwner.EMPTY;
+		return stone.getOwner() == StoneOwner.EMPTY || stone.getOwner() == StoneOwner.NUSED;
 	}
 
 
@@ -407,7 +423,7 @@ public class GoBoard {
 	public boolean playMove(int row, int column, StoneOwner playerPlacing)
 	{
 		//TODO: fill in move logic
-		LegalMoveObj legalMoveObj = isLegalMove(row, column, playerPlacing);
+		LegalMoveObj legalMoveObj = isLegalMove(row, column, playerPlacing, false);
 		
 		if(!legalMoveObj.isLegal())
 			return false;
@@ -430,7 +446,7 @@ public class GoBoard {
 		for(int y=0; y < height; y++) {
 
 			for(int x=0; x < width; x++) {
-				LegalMoveObj option = isLegalMove(y, x, playerToMove);
+				LegalMoveObj option = isLegalMove(y, x, playerToMove, false);
 				if(option.isLegal()) {
 					coords.add(new Coordinates(x, y));
 					moveValues.add((double) option.getCapturedPieces().size());
@@ -452,5 +468,178 @@ public class GoBoard {
 			playMove(coords.get(idx).y, coords.get(idx).x, playerToMove);
 	}
 
+	public void _print_positions()
+	{
+		for(int y=0; y < height; y++) {
+			for(int x=0; x < width; x++) {
+				System.out.print(stonePositions[y][x].getOwner() + " ");
+			}
+			System.out.println();
+		}
+	}
 
+	DuplicateStateTracker dupCutter;
+	int times = 0;
+	public int goalReached = 0;
+	//w, h
+	public double minimaxAiMove(int row, int col, StoneOwner playerToMove, StoneOwner maximizingPlayer, GoBoard currentBoard, int depth)
+	{
+//		if(depth > 30)
+//		{
+//			//if depth is too big, ignore the rest of the tree
+//			if(depth > 31)
+//				System.out.println("depth is " + depth);
+//			return Double.NEGATIVE_INFINITY;
+//		}
+		
+		times++;
+	//	if(times % 100000 == 0){
+	//		currentBoard._print_positions();
+			System.out.println("times: " + times + " d " + depth);
+	//	}
+	
+//		if(row == 1 && col == 0)
+//		{
+//			_print_positions();
+//		}
+		
+		if(row == -1 && col == -1)
+		{
+			dupCutter = new DuplicateStateTracker();
+		}
+//		if(row == -1 && col == -1)
+//		{
+//			tempBoard = new GoBoard(currentBoard);
+//			dupCutter = new BoardStateTracker();
+//		} else {
+//			tempBoard = new GoBoard(currentBoard);
+//			tempBoard.playMove(row, col, playerToMove);
+//			
+//			//change player to move
+//			//playerToMove = playerToMove.getOpposingColour();
+//			tempBoard.setPlayerToMove(playerToMove.getOpposingColour());
+//		}
+		
+//		if(dupCutter.isSameAsPrevious(tempBoard.stonePositions))
+//		{
+//			//if move was seen on the board before cut it
+//			if(playerToMove == maximizingPlayer)
+//				return Double.POSITIVE_INFINITY;
+//			else
+//				return Double.NEGATIVE_INFINITY;
+//		} else {
+//			dupCutter.addState(tempBoard.stonePositions);
+//		}
+		
+		//
+		//consider "adjacent" all possible moves
+		//
+		
+		//assign a infinite value to a winning move
+		if(currentBoard.isGoalReached()){
+			goalReached++;
+			return Double.POSITIVE_INFINITY;
+		}
+		
+		List<Coordinates> coords = new ArrayList<>();
+		//List<Double> moveValues = new ArrayList<>();
+		
+		for(int y=0; y < height; y++) {
+			for(int x=0; x < width; x++) {
+				LegalMoveObj option = currentBoard.isLegalMove(y, x, playerToMove, false);
+				if(option.isLegal()) {
+					coords.add(new Coordinates(x, y));
+					//moveValues.add((double) option.getCapturedPieces().size());
+				}
+			}
+		}
+		
+		//TODO: check if white has two eyes
+		if(coords.size() == 0) {
+			int liberties = 0;
+			int r = 0,  c = 0;
+			//List<Integer> libertyList = new ArrayList<>();
+			for(int y=0; y < height; y++) {
+				for(int x=0; x < width; x++) {
+					if(currentBoard.stonePositions[y][x].getOwner() == StoneOwner.EMPTY)
+					{
+						liberties++;
+						r = y;
+						c = x;
+					}
+				}
+			}
+			
+//			libertyList.add(liberties);
+			
+			if(liberties == 1)
+			{
+				System.out.println("only 1 liberty left");
+				currentBoard.setPlayerToMove(playerToMove.getOpposingColour());
+				if(currentBoard.isLegalMove(r, c, playerToMove.getOpposingColour(), false).isLegal())
+				{
+					currentBoard.playMove(r, c, playerToMove.getOpposingColour());
+					if(currentBoard.isGoalReached())
+					{
+						System.out.println(playerToMove + " moves somewhere else on the board.");
+						return Double.POSITIVE_INFINITY;
+					}
+				}
+			}
+			
+			//no legal moves are left => goal is not met
+			return Double.NEGATIVE_INFINITY;
+		}
+			
+		//make a copy of the current board
+		//to perform moves at
+		GoBoard tempBoard;
+		
+		if(playerToMove == maximizingPlayer)
+		{
+			double bestSoFar = Double.NEGATIVE_INFINITY;
+			for(int i=0; i < coords.size(); i++)
+			{
+				tempBoard = new GoBoard(currentBoard);
+				tempBoard.playMove(coords.get(i).y, coords.get(i).x, playerToMove);
+				tempBoard.setPlayerToMove(playerToMove.getOpposingColour());
+				
+				// if we can record the state for the player, proceed, otherwise
+				// state has been examined before
+				if(dupCutter.addState(tempBoard.stonePositions, playerToMove)) {
+					//dupCutter.addState(tempBoard.stonePositions);
+				
+					double value = minimaxAiMove(0, 0, playerToMove.getOpposingColour(),
+							maximizingPlayer, tempBoard, depth + 1);
+					bestSoFar = Double.max(value, bestSoFar);
+				}
+					
+			}
+			
+			return bestSoFar;
+			
+		} else {
+			
+			double bestSoFar = Double.POSITIVE_INFINITY;
+			for(int i=0; i < coords.size(); i++)
+			{
+				tempBoard = new GoBoard(currentBoard);
+				tempBoard.playMove(coords.get(i).y, coords.get(i).x, playerToMove);
+				tempBoard.setPlayerToMove(playerToMove.getOpposingColour());
+				
+				if(dupCutter.addState(tempBoard.stonePositions, playerToMove))
+				{
+//					dupCutter.addState(tempBoard.stonePositions);
+					
+					double value = minimaxAiMove(0, 0, playerToMove.getOpposingColour(),
+							maximizingPlayer, tempBoard, depth + 1);
+					bestSoFar = Double.min(value, bestSoFar);
+				}
+			}
+			
+			return bestSoFar;
+		}
+		
+
+	}
 }
