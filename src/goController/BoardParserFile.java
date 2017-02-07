@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class FileBoardParser extends BoardParser {
+public class BoardParserFile extends BoardParser {
 
 	private File input;
 	private Stone[][] board;
@@ -22,7 +22,7 @@ public class FileBoardParser extends BoardParser {
 	
 	private int rows;
 	
-	public FileBoardParser(String fname) {
+	public BoardParserFile(String fname) {
 		input = new File(fname);
 		
 		try(Stream<String> stream = Files.lines(Paths.get(fname)))
@@ -65,6 +65,9 @@ public class FileBoardParser extends BoardParser {
 					break;
 				case '-':
 					board[i][j] = new Stone(StoneOwner.EMPTY, i, j);
+					break;
+				case 'E':
+					board[i][j] = new Stone(StoneOwner.NUSED, i, j);
 					break;
 				default:
 					System.out.println("Unrecognized character: " + lines.get(i).charAt(j));
