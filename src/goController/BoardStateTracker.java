@@ -12,6 +12,15 @@ public class BoardStateTracker {
 		states  = new ArrayList<Stone[][]>();
 	}
 	
+	public BoardStateTracker(BoardStateTracker tracker)
+	{
+		states = new ArrayList<Stone[][]>();
+		for(Stone[][] state : tracker.states)
+		{
+			states.add(deepCopyState(state));
+		}
+	}
+	
 
 	/**
 	 * Function that adds the state currentState only if currentState is not equal
@@ -33,16 +42,19 @@ public class BoardStateTracker {
 		states.add(currentStateCopy);
 	}
 	
-	public boolean isSameAsPrevious(Stone[][] currentState){
+	public boolean isSameAsPrevious(Stone[][] currentState) {
+		boolean result = false;
 		for(Stone[][] state: states)
 		{
 			if(Arrays.deepEquals(currentState, state))
 			{
-				return true;
+				//we have found the identical state, no point continuing the loop
+				result = true;
+				break;
 			}
 		}
 		
-		return false;
+		return result;
 	}
 	
 	public List<Stone[][]> getStates() {
