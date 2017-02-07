@@ -85,7 +85,7 @@ public class BoardBehaviorTest {
 		
 		StoneOwner oldOwner = board.getStonePositions()[1][1].getOwner();
 		
-		LegalMoveObj legalObj = board.isLegalMove(1, 1, StoneOwner.BLACK);
+		LegalMoveObj legalObj = board.isLegalMove(1, 1, StoneOwner.BLACK, false);
 		assertTrue(legalObj.isLegal());
 		
 		assertEquals(oldOwner, board.getStonePositions()[1][1].getOwner());

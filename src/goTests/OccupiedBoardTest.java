@@ -58,7 +58,7 @@ public class OccupiedBoardTest {
 		board = new GoBoard(5, 6);
 		board.setStonePositions(stonePositions);
 		
-		assertFalse(board.isLegalMove(0, 1, StoneOwner.BLACK).isLegal());
+		assertFalse(board.isLegalMove(0, 1, StoneOwner.BLACK, false).isLegal());
 	}
 	
 	@Test
