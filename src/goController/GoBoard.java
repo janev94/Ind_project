@@ -19,6 +19,7 @@ public class GoBoard {
 	
 	private Stone[][] stonePositions;
 	private BoardStateTracker previousStates;
+	public Stone goalStone;
 
 	public BoardStateTracker getPreviousStates() {
 		return previousStates;
@@ -77,6 +78,7 @@ public class GoBoard {
 	
 	public void setGoal(GoGoal goal) {
 		this.goal = goal;
+		goalStone = new Stone(StoneOwner.EMPTY, goal.getHeight(), goal.getWidth());
 	}
 	
 	public boolean isGoalReached() {
@@ -559,33 +561,44 @@ public class GoBoard {
 			int liberties = 0;
 			int r = 0,  c = 0;
 			//List<Integer> libertyList = new ArrayList<>();
+			
+			//there were no legal moves for one of the players,
+			//check if any legal move for the opponent reaches the goal
+			currentBoard.setPlayerToMove(playerToMove.getOpposingColour());
 			for(int y=0; y < height; y++) {
 				for(int x=0; x < width; x++) {
 					if(currentBoard.stonePositions[y][x].getOwner() == StoneOwner.EMPTY)
 					{
-						liberties++;
-						r = y;
-						c = x;
+//						LegalMoveObj obj = currentBoard.isLegalMove(y, x, playerToMove.getOpposingColour(), false);
+//						if(obj.isLegal())
+//						{
+//							List<Stone> capturedStones = new ArrayList<>(obj.getCapturedPieces());
+//							if(capturedStones.contains(goalStone))
+//								return Double.POSITIVE_INFINITY; 
+//						}
+//						liberties++;
+//						r = y;
+//						c = x;
 					}
 				}
 			}
 			
 //			libertyList.add(liberties);
 			
-			if(liberties == 1)
-			{
-				System.out.println("only 1 liberty left");
-				currentBoard.setPlayerToMove(playerToMove.getOpposingColour());
-				if(currentBoard.isLegalMove(r, c, playerToMove.getOpposingColour(), false).isLegal())
-				{
-					currentBoard.playMove(r, c, playerToMove.getOpposingColour());
-					if(currentBoard.isGoalReached())
-					{
-						System.out.println(playerToMove + " moves somewhere else on the board.");
-						return Double.POSITIVE_INFINITY;
-					}
-				}
-			}
+//			if(liberties == 1)
+//			{
+//				System.out.println("only 1 liberty left");
+//				currentBoard.setPlayerToMove(playerToMove.getOpposingColour());
+//				if(currentBoard.isLegalMove(r, c, playerToMove.getOpposingColour(), false).isLegal())
+//				{
+//					currentBoard.playMove(r, c, playerToMove.getOpposingColour());
+//					if(currentBoard.isGoalReached())
+//					{
+//						System.out.println(playerToMove + " moves somewhere else on the board.");
+//						return Double.POSITIVE_INFINITY;
+//					}
+//				}
+//			}
 			
 			//no legal moves are left => goal is not met
 			return Double.NEGATIVE_INFINITY;
@@ -606,7 +619,33 @@ public class GoBoard {
 				
 				// if we can record the state for the player, proceed, otherwise
 				// state has been examined before
-				if(dupCutter.addState(tempBoard.stonePositions, playerToMove)) {
+
+				/* Convert board to a string, to hash */
+				StringBuilder boardBuilder = new StringBuilder();
+				for(int y=0; y < height; y++) {
+					for(int x=0; x < width; x++) {
+						char ch = ' ';
+						switch(tempBoard.stonePositions[y][x].getOwner())
+						{
+						case BLACK:
+							ch = 'x';
+							break;
+						case EMPTY:
+							ch = '-';
+							break;
+						case NUSED:
+							ch = 'E';
+							break;
+						case WHITE:
+							ch = 'o';
+							break;
+						}
+						boardBuilder.append(ch);
+					}
+				}
+				
+				//if(dupCutter.addState(tempBoard.stonePositions, playerToMove)) {
+				if(dupCutter.addStringState(boardBuilder.toString(), playerToMove)) {
 					//dupCutter.addState(tempBoard.stonePositions);
 				
 					double value = minimaxAiMove(0, 0, playerToMove.getOpposingColour(),
@@ -627,8 +666,32 @@ public class GoBoard {
 				tempBoard.playMove(coords.get(i).y, coords.get(i).x, playerToMove);
 				tempBoard.setPlayerToMove(playerToMove.getOpposingColour());
 				
-				if(dupCutter.addState(tempBoard.stonePositions, playerToMove))
-				{
+				StringBuilder boardBuilder = new StringBuilder();
+				for(int y=0; y < height; y++) {
+					for(int x=0; x < width; x++) {
+						char ch = ' ';
+						switch(tempBoard.stonePositions[y][x].getOwner())
+						{
+						case BLACK:
+							ch = 'x';
+							break;
+						case EMPTY:
+							ch = '-';
+							break;
+						case NUSED:
+							ch = 'E';
+							break;
+						case WHITE:
+							ch = 'o';
+							break;
+						}
+						boardBuilder.append(ch);
+					}
+				}
+				
+				if(dupCutter.addStringState(boardBuilder.toString(), playerToMove)) {
+				//if(dupCutter.addState(tempBoard.stonePositions, playerToMove))
+				//{
 //					dupCutter.addState(tempBoard.stonePositions);
 					
 					double value = minimaxAiMove(0, 0, playerToMove.getOpposingColour(),

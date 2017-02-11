@@ -2,7 +2,9 @@ package goController;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //TODO: relate DuplicateStateTracker and BoardStaetTracker by inheritance
 
@@ -11,10 +13,42 @@ public class DuplicateStateTracker {
 
 	List<Stone[][]> states;
 	List<List<StoneOwner>> playersToMove;
+
+	List<String> stringStates;
+	Map<String, List<StoneOwner>> evaluatedBoards;
 	
 	public DuplicateStateTracker() {
 		states  = new ArrayList<Stone[][]>();
 		playersToMove = new ArrayList<>(2);
+		
+		evaluatedBoards = new HashMap<>();
+	}
+
+	public boolean addStringState(String state, StoneOwner currentPlayer)
+	{
+		List<StoneOwner> owners = evaluatedBoards.get(state);
+		
+		if(owners == null)
+		{
+			List<StoneOwner> newOwners = new ArrayList<>();
+			newOwners.add(currentPlayer);
+			evaluatedBoards.put(state, newOwners);
+			return true;
+		}
+		
+		if(owners.contains(currentPlayer))
+		{
+			return false;
+		}
+		
+		owners.add(currentPlayer);
+		return true;
+		
+	}
+	
+	
+	public Map<String, List<StoneOwner>> getEvaluatedBoards() {
+		return evaluatedBoards;
 	}
 	
 
