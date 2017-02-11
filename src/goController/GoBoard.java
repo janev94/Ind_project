@@ -670,6 +670,11 @@ public class GoBoard {
 				
 					double value = minimaxAiMove(0, 0, playerToMove.getOpposingColour(),
 							maximizingPlayer, tempBoard, depth + 1);
+					
+					//once value is known update record for the map
+					dupCutter.getEvaluatedBoards()
+						.get(boardBuilder.toString()).put(playerToMove, value);
+					
 					if(row == -1)
 						System.out.println(coords.get(i).y + ", " + coords.get(i).x + " " + value + " " + times);
 					
@@ -679,6 +684,12 @@ public class GoBoard {
 //						win_x = coords.get(i).x;
 //						win_y = coords.get(i).y;
 //					}
+				} 
+				else {
+					//get the value stored for this board 
+					double value = dupCutter.getEvaluatedBoards()
+							.get(boardBuilder.toString()).get(playerToMove);
+					bestSoFar = Double.max(value, bestSoFar);
 				}
 					
 			}
@@ -724,12 +735,23 @@ public class GoBoard {
 					
 					double value = minimaxAiMove(0, 0, playerToMove.getOpposingColour(),
 							maximizingPlayer, tempBoard, depth + 1);
+					
+					//once value is known update record for the map
+					dupCutter.getEvaluatedBoards()
+						.get(boardBuilder.toString()).put(playerToMove, value);
+					
 					bestSoFar = Double.min(value, bestSoFar);
 					if(bestSoFar == Double.NEGATIVE_INFINITY)
 					{
 						win_x = coords.get(i).x;
 						win_y = coords.get(i).y;
 					}
+				}
+				else {
+					//get the value stored for this board 
+					double value = dupCutter.getEvaluatedBoards()
+							.get(boardBuilder.toString()).get(playerToMove);
+					bestSoFar = Double.min(value, bestSoFar);
 				}
 			}
 			

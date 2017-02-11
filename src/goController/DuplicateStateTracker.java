@@ -11,11 +11,10 @@ import java.util.Map;
 public class DuplicateStateTracker {
 
 
-	List<Stone[][]> states;
-	List<List<StoneOwner>> playersToMove;
+	private List<Stone[][]> states;
+	private List<List<StoneOwner>> playersToMove;
 
-	List<String> stringStates;
-	Map<String, List<StoneOwner>> evaluatedBoards;
+	private Map<String, Map<StoneOwner, Double>> evaluatedBoards;
 	
 	public DuplicateStateTracker() {
 		states  = new ArrayList<Stone[][]>();
@@ -26,28 +25,35 @@ public class DuplicateStateTracker {
 
 	public boolean addStringState(String state, StoneOwner currentPlayer)
 	{
-		List<StoneOwner> owners = evaluatedBoards.get(state);
+		Map<StoneOwner, Double> owners = evaluatedBoards.get(state);
 		
+		//record is first seen
 		if(owners == null)
 		{
-			List<StoneOwner> newOwners = new ArrayList<>();
-			newOwners.add(currentPlayer);
-			evaluatedBoards.put(state, newOwners);
+			//List<StoneOwner> newOwners = new ArrayList<>();
+			//add the player colour for which we are evaluating
+			//newOwners.add(currentPlayer);
+			Map<StoneOwner, Double> resultingBoard = new HashMap<>();
+			resultingBoard.put(currentPlayer, null);
+			
+			evaluatedBoards.put(state, resultingBoard);
 			return true;
 		}
 		
-		if(owners.contains(currentPlayer))
+		//board has already been evaluated with this owner
+		if(owners.containsKey(currentPlayer))
 		{
 			return false;
 		}
 		
-		owners.add(currentPlayer);
+		//board has been seen, but not with this player having first move
+		owners.put(currentPlayer, null);
 		return true;
 		
 	}
 	
 	
-	public Map<String, List<StoneOwner>> getEvaluatedBoards() {
+	public Map<String, Map<StoneOwner, Double>> getEvaluatedBoards() {
 		return evaluatedBoards;
 	}
 	
