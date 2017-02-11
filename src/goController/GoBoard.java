@@ -483,9 +483,16 @@ public class GoBoard {
 	DuplicateStateTracker dupCutter;
 	int times = 0;
 	public int goalReached = 0;
+	
+	public int win_x;
+	public int win_y;
 	//w, h
 	public double minimaxAiMove(int row, int col, StoneOwner playerToMove, StoneOwner maximizingPlayer, GoBoard currentBoard, int depth)
 	{
+		if(_countBlacks(currentBoard) < 5){
+			System.out.println();
+		}
+		
 //		if(depth > 30)
 //		{
 //			//if depth is too big, ignore the rest of the tree
@@ -497,7 +504,7 @@ public class GoBoard {
 		times++;
 	//	if(times % 100000 == 0){
 	//		currentBoard._print_positions();
-			System.out.println("times: " + times + " d " + depth);
+//			System.out.println("times: " + times + " d " + depth);
 	//	}
 	
 //		if(row == 1 && col == 0)
@@ -548,10 +555,12 @@ public class GoBoard {
 		
 		for(int y=0; y < height; y++) {
 			for(int x=0; x < width; x++) {
-				LegalMoveObj option = currentBoard.isLegalMove(y, x, playerToMove, false);
-				if(option.isLegal()) {
-					coords.add(new Coordinates(x, y));
-					//moveValues.add((double) option.getCapturedPieces().size());
+				if(!fillingOwnEye(y, x, currentBoard)) {
+					LegalMoveObj option = currentBoard.isLegalMove(y, x, playerToMove, false);
+					if(option.isLegal()) {
+						coords.add(new Coordinates(x, y));
+						//moveValues.add((double) option.getCapturedPieces().size());
+					}
 				}
 			}
 		}
@@ -563,19 +572,25 @@ public class GoBoard {
 			//List<Integer> libertyList = new ArrayList<>();
 			
 			//there were no legal moves for one of the players,
-			//check if any legal move for the opponent reaches the goal
+			//check if any legal move for the opponent, not filling own eyes
 			currentBoard.setPlayerToMove(playerToMove.getOpposingColour());
+			playerToMove = playerToMove.getOpposingColour();
 			for(int y=0; y < height; y++) {
 				for(int x=0; x < width; x++) {
 					if(currentBoard.stonePositions[y][x].getOwner() == StoneOwner.EMPTY)
 					{
-//						LegalMoveObj obj = currentBoard.isLegalMove(y, x, playerToMove.getOpposingColour(), false);
-//						if(obj.isLegal())
-//						{
-//							List<Stone> capturedStones = new ArrayList<>(obj.getCapturedPieces());
-//							if(capturedStones.contains(goalStone))
-//								return Double.POSITIVE_INFINITY; 
-//						}
+						if(!fillingOwnEye(y, x, currentBoard))
+						{
+							LegalMoveObj obj = currentBoard.isLegalMove(y, x, playerToMove.getOpposingColour(), false);
+							if(obj.isLegal())
+							{
+								coords.add(new Coordinates(x, y));
+//								List<Stone> capturedStones = new ArrayList<>(obj.getCapturedPieces());
+//								if(capturedStones.contains(goalStone))
+//									return Double.POSITIVE_INFINITY; 
+							}
+							
+						}
 //						liberties++;
 //						r = y;
 //						c = x;
@@ -601,7 +616,8 @@ public class GoBoard {
 //			}
 			
 			//no legal moves are left => goal is not met
-			return Double.NEGATIVE_INFINITY;
+			if(coords.size() == 0)
+				return Double.NEGATIVE_INFINITY;
 		}
 			
 		//make a copy of the current board
@@ -613,6 +629,10 @@ public class GoBoard {
 			double bestSoFar = Double.NEGATIVE_INFINITY;
 			for(int i=0; i < coords.size(); i++)
 			{
+				if(coords.get(i).y == 0 && coords.get(i).x == 12 && row == -1 && col == -1)
+				{
+					System.out.println();
+				}
 				tempBoard = new GoBoard(currentBoard);
 				tempBoard.playMove(coords.get(i).y, coords.get(i).x, playerToMove);
 				tempBoard.setPlayerToMove(playerToMove.getOpposingColour());
@@ -650,7 +670,15 @@ public class GoBoard {
 				
 					double value = minimaxAiMove(0, 0, playerToMove.getOpposingColour(),
 							maximizingPlayer, tempBoard, depth + 1);
+					if(row == -1)
+						System.out.println(coords.get(i).y + ", " + coords.get(i).x + " " + value + " " + times);
+					
 					bestSoFar = Double.max(value, bestSoFar);
+//					if(bestSoFar == Double.POSITIVE_INFINITY)
+//					{
+//						win_x = coords.get(i).x;
+//						win_y = coords.get(i).y;
+//					}
 				}
 					
 			}
@@ -697,6 +725,11 @@ public class GoBoard {
 					double value = minimaxAiMove(0, 0, playerToMove.getOpposingColour(),
 							maximizingPlayer, tempBoard, depth + 1);
 					bestSoFar = Double.min(value, bestSoFar);
+					if(bestSoFar == Double.NEGATIVE_INFINITY)
+					{
+						win_x = coords.get(i).x;
+						win_y = coords.get(i).y;
+					}
 				}
 			}
 			
@@ -704,5 +737,35 @@ public class GoBoard {
 		}
 		
 
+	}
+
+	private boolean fillingOwnEye(int y, int x, GoBoard currentBoard) {
+		StoneOwner allyColour = currentBoard.playerToMove;
+
+		for(int dy = -1; dy < 2; dy++) {
+			for(int dx = -1; dx < 2; dx++)
+			{
+				if(dx == 0 && dy == 0)
+					continue;
+				if(currentBoard.isInBounds(y + dy, x + dx))
+					if(currentBoard.stonePositions[y+dy][x+dx].getOwner() != allyColour)
+						return false;
+			}
+		}
+		
+		return true;
+	}
+
+	private int _countBlacks(GoBoard currentBoard) {
+		int blacks = 0;
+		for(int y=0; y < height; y++) {
+			for(int x=0; x < width; x++) {
+				if(currentBoard.stonePositions[y][x].getOwner() == StoneOwner.BLACK) {
+					blacks++;
+				}
+			}
+		}
+
+		return blacks;
 	}
 }
