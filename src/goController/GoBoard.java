@@ -489,9 +489,6 @@ public class GoBoard {
 	//w, h
 	public double minimaxAiMove(int row, int col, StoneOwner playerToMove, StoneOwner maximizingPlayer, GoBoard currentBoard, int depth)
 	{
-		if(_countBlacks(currentBoard) < 5){
-			System.out.println();
-		}
 		
 //		if(depth > 30)
 //		{
@@ -504,7 +501,7 @@ public class GoBoard {
 		times++;
 	//	if(times % 100000 == 0){
 	//		currentBoard._print_positions();
-//			System.out.println("times: " + times + " d " + depth);
+			System.out.println("times: " + times + " d " + depth);
 	//	}
 	
 //		if(row == 1 && col == 0)
@@ -679,11 +676,11 @@ public class GoBoard {
 						System.out.println(coords.get(i).y + ", " + coords.get(i).x + " " + value + " " + times);
 					
 					bestSoFar = Double.max(value, bestSoFar);
-//					if(bestSoFar == Double.POSITIVE_INFINITY)
-//					{
-//						win_x = coords.get(i).x;
-//						win_y = coords.get(i).y;
-//					}
+					if(bestSoFar == Double.POSITIVE_INFINITY)
+					{
+						win_x = coords.get(i).x;
+						win_y = coords.get(i).y;
+					}
 				} 
 				else {
 					//get the value stored for this board 
@@ -741,11 +738,11 @@ public class GoBoard {
 						.get(boardBuilder.toString()).put(playerToMove, value);
 					
 					bestSoFar = Double.min(value, bestSoFar);
-					if(bestSoFar == Double.NEGATIVE_INFINITY)
-					{
-						win_x = coords.get(i).x;
-						win_y = coords.get(i).y;
-					}
+//					if(bestSoFar == Double.NEGATIVE_INFINITY)
+//					{
+//						win_x = coords.get(i).x;
+//						win_y = coords.get(i).y;
+//					}
 				}
 				else {
 					//get the value stored for this board 

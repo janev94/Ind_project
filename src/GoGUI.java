@@ -2,10 +2,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import goController.BoardParser;
+import goController.BoardParserFile;
 import goController.BoardParserString;
-import goController.FileBoardParser;
 import goController.GoBoard;
 import goController.GoPlayer;
+import goController.LegalMoveObj;
 import goController.Stone;
 import goController.StoneOwner;
 import javafx.application.Application;
@@ -55,8 +56,8 @@ public class GoGUI extends Application {
 		
 		players = new GoPlayer[2];
 		
-		players[0] = GoPlayer.ARTIFICIAL;
-		players[1] = GoPlayer.ARTIFICIAL;
+		players[0] = GoPlayer.HUMAN;
+		players[1] = GoPlayer.HUMAN;
 		
 		Group root = drawScene();
         Scene scene = new Scene(root, hPadding + SQ_SIDE * (boardWidth), vPadding + SQ_SIDE * (boardHeight));
@@ -65,9 +66,25 @@ public class GoGUI extends Application {
         stage.setScene(scene);
         stage.show();
         
-        while(!board.isGoalReached())
-        	checkAndMoveAI();
-    }
+        board._print_positions();
+        board.getPreviousStates().addState(board.getStonePositions());
+        //while(!board.isGoalReached())
+        //	checkAndMoveAI();
+        //GoBoard boardCpy = new GoBoard(board);
+        System.out.println("Player to move: " + playerToMove);
+        
+        StoneOwner maximixingPlayer = StoneOwner.BLACK;
+        
+        MoveCruncher<?> cruncher = new MoveCruncher<>(board, playerToMove, maximixingPlayer);
+
+        new Thread(cruncher).start();
+//        System.out.println("minimax: " + board.minimaxAiMove(-1, -1, playerToMove, maximixingPlayer, board, 0));
+        
+        System.out.println("win_x: " + board.win_x + ", win_y: " + board.win_y);
+       
+        System.out.println("Goal reached: " + board.goalReached);
+        System.out.println("liberties: ");
+	}
 
 	private void checkAndMoveAI() {
 		
@@ -93,7 +110,7 @@ public class GoGUI extends Application {
 		
 				StoneGUI st = (StoneGUI) positions.get(y*boardWidth + x);
 				
-				if(board.isLegalMove(st.getStone().getRow(), st.getStone().getCol(), playerToMove).isLegal()) {
+				if(board.isLegalMove(st.getStone().getRow(), st.getStone().getCol(), playerToMove, false).isLegal()) {
 					legals++;
 				}
 			}
@@ -131,6 +148,8 @@ public class GoGUI extends Application {
 					paint = Color.BLACK;
 				else if(initialStonePositions[y][x].getOwner() == StoneOwner.WHITE)
 					paint = Color.WHITESMOKE;
+				else if(initialStonePositions[y][x].getOwner() == StoneOwner.NUSED)
+					paint = Color.GRAY;
 					
 //				Circle circ = new Circle((x+1) * SQ_SIDE + RADIUS, (y+1) * SQ_SIDE,
 //						RADIUS, paint);
@@ -165,6 +184,7 @@ public class GoGUI extends Application {
 						turn = !turn;
 					} else
 					{
+						board.isLegalMove(st.getStone().getRow(), st.getStone().getCol(), playerToMove, true);
 						System.out.println("Illegal move");
 						System.out.println(playerToMove);
 					}
@@ -236,6 +256,8 @@ public class GoGUI extends Application {
 					paint = Color.BLACK;
 				else if(stonePositions[y][x].getOwner() == StoneOwner.WHITE)
 					paint = Color.WHITESMOKE;
+				else if(stonePositions[y][x].getOwner() == StoneOwner.NUSED)
+					paint = Color.GRAY;
 			
 				positions.get(y*boardWidth + x).setFill(paint);
 			}
@@ -261,7 +283,7 @@ public class GoGUI extends Application {
 					continue;
 				
 				Paint paint;
-				if(board.isLegalMove(st.getStone().getRow(), st.getStone().getCol(), playerToMove).isLegal()) {
+				if(board.isLegalMove(st.getStone().getRow(), st.getStone().getCol(), playerToMove, false).isLegal()) {
 					paint = Color.LIMEGREEN;
 				}
 				else 
@@ -305,7 +327,8 @@ public class GoGUI extends Application {
 		
 		BoardParser parser = new BoardParserString(parsedString);
 		
-		FileBoardParser fileParser = new FileBoardParser("kill_easy.gpr");
+		BoardParserFile fileParser = new BoardParserFile("6die_black_border.gpr");
+//		BoardParserFile fileParser = new BoardParserFile("7unsettled_sente.gpr");
 		fileParser.parse();
 		
 		String[] rows = parsedString.split("\n");
