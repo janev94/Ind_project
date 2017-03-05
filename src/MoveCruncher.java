@@ -24,8 +24,16 @@ public class MoveCruncher<V> extends Task<V> {
 		System.out.println("Initializing move crunches...");
 		long startTime = System.currentTimeMillis();
 		
-		System.out.println("CRUNCHER: minimax:" + 
-		board.minimaxAiMove(-1, -1, playerToMove, maximizingPlayer, board, 0));
+		System.out.println("CRUNCHER: alpha beta:" + 
+			board.alphaBeta(-1, -1, playerToMove, maximizingPlayer, board, 0,
+					Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY)
+		);
+
+//		System.out.println("CRUNCHER: minimax:" + 
+//			board.minimaxAiMove(-1, -1, playerToMove, maximizingPlayer, board, 0)
+//		);
+
+		
 		System.out.println("CRUNCHER: win_x: " + board.win_x + ", win_y: " + board.win_y);
 		
 		System.out.println("Time elapsed: " + (System.currentTimeMillis() - startTime));
