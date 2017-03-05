@@ -250,7 +250,7 @@ public class GoBoard {
 		Set<Stone> neighbors = getNeighbors(current, tempBoard);
 		for(Stone neighbor: neighbors)
 		{
-			if(!visited.contains(neighbor) && neighbor.getOwner() == searchedOwner)
+			if(!visited.contains(neighbor) && neighbor.getOwner() == searchedOwner && !toVisit.contains(neighbor))
 				toVisitNeighbors.add(neighbor);
 		}
 		
@@ -268,6 +268,7 @@ public class GoBoard {
 	{
 		Stone currentStone = tempBoard[startHeight][startWidth];
 		Set<Stone> group;
+		
 		if(!visited.contains(currentStone) && currentStone.getOwner() == searchedOwner)
 			group = findGroup(currentStone, tempBoard);
 		else
@@ -676,7 +677,7 @@ public class GoBoard {
 						System.out.println(coords.get(i).y + ", " + coords.get(i).x + " " + value + " " + times);
 					
 					bestSoFar = Double.max(value, bestSoFar);
-					if(bestSoFar == Double.POSITIVE_INFINITY)
+					if(value == Double.POSITIVE_INFINITY)
 					{
 						win_x = coords.get(i).x;
 						win_y = coords.get(i).y;
@@ -757,6 +758,248 @@ public class GoBoard {
 		
 
 	}
+	
+	
+	/**
+	 * Function, that uses alpha beta pruning, built on top of minimax function
+	 * @param row
+	 * @param col
+	 * @param playerToMove - the to be evaluated for
+	 * @param maximizingPlayer - the player, trying to capture(KILL problems currently supported)
+	 * @param currentBoard - the board on which evaluations are performed
+	 * @param depth - the current depth in the search tree
+	 * @return Positive number if group from goal can be captured
+	 */
+	public double alphaBeta(int row, int col, StoneOwner playerToMove, StoneOwner maximizingPlayer, GoBoard currentBoard, int depth, double alpha, double beta)
+	{
+
+		//TODO: check for depth
+		
+//		if(depth >= 4)
+//		{
+//			//TODO: implement heurisctic function
+//			if(playerToMove == maximizingPlayer)
+//				return Double.POSITIVE_INFINITY;
+//			else
+//				return Double.NEGATIVE_INFINITY;
+//		}
+		
+		times++;
+		System.out.println("times: " + times + " d " + depth);
+
+		//initial call, initialize a new dupCutter
+		if(row == -1 && col == -1)
+		{
+			dupCutter = new DuplicateStateTracker();
+		}
+		
+		//assign a infinite value to a winning move
+		if(currentBoard.isGoalReached()){
+			goalReached++;
+			return Double.POSITIVE_INFINITY;
+		}
+		
+		List<Coordinates> coords = new ArrayList<>();
+		
+		for(int y=0; y < height; y++) {
+			for(int x=0; x < width; x++) {
+				if(!fillingOwnEye(y, x, currentBoard)) {
+					LegalMoveObj option = currentBoard.isLegalMove(y, x, playerToMove, false);
+					
+					//Consider move as legal if it does not fill own eye and is legal 
+					if(option.isLegal()) {
+						coords.add(new Coordinates(x, y));
+					}
+				}
+			}
+		}
+		
+		//TODO: check if white has two eyes
+		if(coords.size() == 0) {
+			//there were no legal moves for one of the players,
+			//check if any legal move for the opponent (not filling own eyes)
+			
+			//change players
+			currentBoard.setPlayerToMove(playerToMove.getOpposingColour());
+			playerToMove = playerToMove.getOpposingColour();
+			
+			for(int y=0; y < height; y++) {
+				for(int x=0; x < width; x++) {
+					if(currentBoard.stonePositions[y][x].getOwner() == StoneOwner.EMPTY)
+					{
+						if(!fillingOwnEye(y, x, currentBoard))
+						{
+							LegalMoveObj obj = currentBoard.isLegalMove(y, x, playerToMove.getOpposingColour(), false);
+							if(obj.isLegal())
+							{
+								coords.add(new Coordinates(x, y));
+							}
+						}
+					}
+				}
+			}
+			
+			
+			//no legal moves are left for either player and goal is not met
+			if(coords.size() == 0)
+				return Double.NEGATIVE_INFINITY;
+		}
+			
+		//make a copy of the current board
+		//to perform moves at
+		GoBoard tempBoard;
+		
+		if(playerToMove == maximizingPlayer)
+		{
+			double bestSoFar = Double.NEGATIVE_INFINITY;
+			for(int i=0; i < coords.size(); i++)
+			{
+				if(coords.get(i).y == 0 && coords.get(i).x == 12 && row == -1 && col == -1)
+				{
+					System.out.println();
+				}
+				tempBoard = new GoBoard(currentBoard);
+				tempBoard.playMove(coords.get(i).y, coords.get(i).x, playerToMove);
+				tempBoard.setPlayerToMove(playerToMove.getOpposingColour());
+				
+				// if we can record the state for the player, proceed, otherwise
+				// state has been examined before
+
+				/* Convert board to a string, to hash */
+				StringBuilder boardBuilder = new StringBuilder();
+				for(int y=0; y < height; y++) {
+					for(int x=0; x < width; x++) {
+						char ch = ' ';
+						switch(tempBoard.stonePositions[y][x].getOwner())
+						{
+						case BLACK:
+							ch = 'x';
+							break;
+						case EMPTY:
+							ch = '-';
+							break;
+						case NUSED:
+							ch = 'E';
+							break;
+						case WHITE:
+							ch = 'o';
+							break;
+						}
+						boardBuilder.append(ch);
+					}
+				}
+
+				//check if state is not examined before, if not add it and proceed
+				if(dupCutter.addStringState(boardBuilder.toString(), playerToMove)) {
+				
+					double value = alphaBeta(0, 0, playerToMove.getOpposingColour(),
+							maximizingPlayer, tempBoard, depth + 1, alpha, beta);
+					
+					//once value is known update record for the map
+					dupCutter.getEvaluatedBoards()
+						.get(boardBuilder.toString()).put(playerToMove, value);
+					
+					if(row == -1)
+						System.out.println(coords.get(i).y + ", " + coords.get(i).x + " " + value + " " + times);
+					
+					bestSoFar = Double.max(value, bestSoFar);
+					if(value == Double.POSITIVE_INFINITY)
+					{
+						win_x = coords.get(i).x;
+						win_y = coords.get(i).y;
+					}
+				} 
+				else {
+					//State has been calculated before, retrieve result
+					double value = dupCutter.getEvaluatedBoards()
+							.get(boardBuilder.toString()).get(playerToMove);
+					bestSoFar = Double.max(value, bestSoFar);
+				}
+				
+				if(bestSoFar >= beta)
+				{
+					return beta;
+				} 
+				if(bestSoFar > alpha)
+				{
+					alpha = bestSoFar;
+				}
+				
+			}
+			
+			return alpha;
+			
+		} else {
+			
+			double bestSoFar = Double.POSITIVE_INFINITY;
+			for(int i=0; i < coords.size(); i++)
+			{
+				tempBoard = new GoBoard(currentBoard);
+				tempBoard.playMove(coords.get(i).y, coords.get(i).x, playerToMove);
+				tempBoard.setPlayerToMove(playerToMove.getOpposingColour());
+				
+				StringBuilder boardBuilder = new StringBuilder();
+				for(int y=0; y < height; y++) {
+					for(int x=0; x < width; x++) {
+						char ch = ' ';
+						switch(tempBoard.stonePositions[y][x].getOwner())
+						{
+						case BLACK:
+							ch = 'x';
+							break;
+						case EMPTY:
+							ch = '-';
+							break;
+						case NUSED:
+							ch = 'E';
+							break;
+						case WHITE:
+							ch = 'o';
+							break;
+						}
+						boardBuilder.append(ch);
+					}
+				}
+				
+				if(dupCutter.addStringState(boardBuilder.toString(), playerToMove)) {
+					
+					double value = alphaBeta(0, 0, playerToMove.getOpposingColour(),
+							maximizingPlayer, tempBoard, depth + 1, alpha, beta);
+					
+					//once value is known update record for the map
+					dupCutter.getEvaluatedBoards()
+						.get(boardBuilder.toString()).put(playerToMove, value);
+					
+					bestSoFar = Double.min(value, bestSoFar);
+//					if(bestSoFar == Double.NEGATIVE_INFINITY)
+//					{
+//						win_x = coords.get(i).x;
+//						win_y = coords.get(i).y;
+//					}
+				}
+				else {
+					//get the value stored for this board 
+					double value = dupCutter.getEvaluatedBoards()
+							.get(boardBuilder.toString()).get(playerToMove);
+					bestSoFar = Double.min(value, bestSoFar);
+				}
+				
+				if(bestSoFar <= alpha)
+				{
+					return bestSoFar;
+				}
+				if(bestSoFar < beta)
+				{
+					beta = bestSoFar;
+				}
+			}
+			
+			return beta;
+		}
+		
+	}
+	
+	
 
 	private boolean fillingOwnEye(int y, int x, GoBoard currentBoard) {
 		StoneOwner allyColour = currentBoard.playerToMove;
@@ -787,4 +1030,7 @@ public class GoBoard {
 
 		return blacks;
 	}
+	
+	
+	
 }

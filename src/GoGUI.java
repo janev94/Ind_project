@@ -327,8 +327,14 @@ public class GoGUI extends Application {
 		
 		BoardParser parser = new BoardParserString(parsedString);
 		
-		BoardParserFile fileParser = new BoardParserFile("6die_black_border.gpr");
+//		BoardParserFile fileParser = new BoardParserFile("6die_black_border.gpr");
 //		BoardParserFile fileParser = new BoardParserFile("7unsettled_sente.gpr");
+//		BoardParserFile fileParser = new BoardParserFile("7unsettled_gote.gpr");
+//		BoardParserFile fileParser = new BoardParserFile("8live_black_border.gpr");
+		
+//		BoardParserFile fileParser = new BoardParserFile("book_examples/problem_4.gpr");
+		BoardParserFile fileParser = new BoardParserFile("book_examples/kill_center");
+		
 		fileParser.parse();
 		
 		String[] rows = parsedString.split("\n");
