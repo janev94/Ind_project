@@ -1,8 +1,13 @@
 package goController;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javafx.scene.paint.Color;
@@ -440,36 +445,36 @@ public class GoBoard {
 	}
 	
 	
-	public void playAIMove(StoneOwner playerToMove)
-	{
-		//first find a legal move
-		List<Coordinates> coords = new ArrayList<>();
-		List<Double> moveValues = new ArrayList<>();
-		
-		for(int y=0; y < height; y++) {
-
-			for(int x=0; x < width; x++) {
-				LegalMoveObj option = isLegalMove(y, x, playerToMove, false);
-				if(option.isLegal()) {
-					coords.add(new Coordinates(x, y));
-					moveValues.add((double) option.getCapturedPieces().size());
-				}
-			}
-		}
-		
-		int idx = -1;
-		double maxValue = Double.NEGATIVE_INFINITY;
-		for(int i=0; i < moveValues.size(); i++) {
-			if(maxValue < moveValues.get(i))
-			{
-				maxValue = moveValues.get(i);
-				idx = i;
-			}
-		}
-		
-		if(idx != -1)
-			playMove(coords.get(idx).y, coords.get(idx).x, playerToMove);
-	}
+//	public void playAIMove(StoneOwner playerToMove)
+//	{
+//		//first find a legal move
+//		List<Coordinates> coords = new ArrayList<>();
+//		List<Double> moveValues = new ArrayList<>();
+//		
+//		for(int y=0; y < height; y++) {
+//
+//			for(int x=0; x < width; x++) {
+//				LegalMoveObj option = isLegalMove(y, x, playerToMove, false);
+//				if(option.isLegal()) {
+//					coords.add(new Coordinates(x, y));
+//					moveValues.add((double) option.getCapturedPieces().size());
+//				}
+//			}
+//		}
+//		
+//		int idx = -1;
+//		double maxValue = Double.NEGATIVE_INFINITY;
+//		for(int i=0; i < moveValues.size(); i++) {
+//			if(maxValue < moveValues.get(i))
+//			{
+//				maxValue = moveValues.get(i);
+//				idx = i;
+//			}
+//		}
+//		
+//		if(idx != -1)
+//			playMove(coords.get(idx).y, coords.get(idx).x, playerToMove);
+//	}
 
 	public void _print_positions()
 	{
@@ -502,7 +507,7 @@ public class GoBoard {
 		times++;
 	//	if(times % 100000 == 0){
 	//		currentBoard._print_positions();
-			System.out.println("times: " + times + " d " + depth);
+//			System.out.println("times: " + times + " d " + depth);
 	//	}
 	
 //		if(row == 1 && col == 0)
@@ -677,7 +682,7 @@ public class GoBoard {
 						System.out.println(coords.get(i).y + ", " + coords.get(i).x + " " + value + " " + times);
 					
 					bestSoFar = Double.max(value, bestSoFar);
-					if(value == Double.POSITIVE_INFINITY)
+					if(value == Double.POSITIVE_INFINITY && row == -1)
 					{
 						win_x = coords.get(i).x;
 						win_y = coords.get(i).y;
@@ -774,18 +779,25 @@ public class GoBoard {
 	{
 
 		//TODO: check for depth
-		
-//		if(depth >= 4)
-//		{
-//			//TODO: implement heurisctic function
+		//depth must be even
+		if(depth >= 100)
+		{
+//			//TODO: implement static board evaluator f-n
 //			if(playerToMove == maximizingPlayer)
-//				return Double.POSITIVE_INFINITY;
-//			else
 //				return Double.NEGATIVE_INFINITY;
-//		}
+//			else
+//				return Double.POSITIVE_INFINITY;
+			if(playerToMove == maximizingPlayer)
+				return Double.NEGATIVE_INFINITY;
+			return -1;
+		}
 		
 		times++;
-		System.out.println("times: " + times + " d " + depth);
+		if(times == 40)
+		{
+			System.out.println();
+		}
+//		System.out.println("times: " + times + " d " + depth);
 
 		//initial call, initialize a new dupCutter
 		if(row == -1 && col == -1)
@@ -800,6 +812,7 @@ public class GoBoard {
 		}
 		
 		List<Coordinates> coords = new ArrayList<>();
+		List<SimpleEntry<Coordinates, LegalMoveObj>> moves = new ArrayList<>();
 		
 		for(int y=0; y < height; y++) {
 			for(int x=0; x < width; x++) {
@@ -809,13 +822,52 @@ public class GoBoard {
 					//Consider move as legal if it does not fill own eye and is legal 
 					if(option.isLegal()) {
 						coords.add(new Coordinates(x, y));
+						moves.add(new SimpleEntry<Coordinates, LegalMoveObj>(new Coordinates(x, y), option));
 					}
 				}
 			}
 		}
 		
+		if(moves.size() != coords.size())
+			System.out.println();
+		
+		moves.sort(new Comparator<SimpleEntry<Coordinates, LegalMoveObj>>() {
+			@Override
+			public int compare(SimpleEntry<Coordinates, LegalMoveObj> o1, SimpleEntry<Coordinates, LegalMoveObj> o2) {
+				//prioritize removing pieces
+				double o2Dist = Math.pow((goalStone.getCol() - o2.getKey().x), 2) + Math.pow(goalStone.getRow() - o2.getKey().y, 2);
+				double o1Dist = Math.pow((goalStone.getCol() - o1.getKey().x), 2) + Math.pow(goalStone.getRow() - o1.getKey().y, 2);
+				double cmp = ((o1Dist)
+						- (o2Dist));
+				
+				double pieces = (o2.getValue().getCapturedPieces().size()
+						- o1.getValue().getCapturedPieces().size()) * 100;
+				
+				cmp *= 10;
+				cmp += pieces;
+				
+				return (int) Math.round(cmp);
+			}
+		});
+		
+//		int cutfactor = (int) (moves.size() * 0.5);
+//		List<SimpleEntry<Coordinates, LegalMoveObj>> toRemove = new ArrayList<>();
+//		
+//		for(int i= cutfactor; i < moves.size(); i++)
+//			toRemove.add(moves.get(i));
+//		moves.removeAll(toRemove);
+		
+//		for(SimpleEntry<Coordinates, LegalMoveObj> entry: moves)
+//		{
+//			System.out.println(goalStone.getCol() + ", " + goalStone.getRow() + 
+//					" -> " + entry.getKey().x + ", " + entry.getKey().y + 
+//					" distance to goal: " + (Math.pow((goalStone.getCol() - entry.getKey().x), 2) + Math.pow(goalStone.getRow() - entry.getKey().y, 2)));
+//		}
+		
+		
+		
 		//TODO: check if white has two eyes
-		if(coords.size() == 0) {
+		if(moves.size() == 0) {
 			//there were no legal moves for one of the players,
 			//check if any legal move for the opponent (not filling own eyes)
 			
@@ -829,10 +881,11 @@ public class GoBoard {
 					{
 						if(!fillingOwnEye(y, x, currentBoard))
 						{
-							LegalMoveObj obj = currentBoard.isLegalMove(y, x, playerToMove.getOpposingColour(), false);
-							if(obj.isLegal())
+							LegalMoveObj option = currentBoard.isLegalMove(y, x, playerToMove.getOpposingColour(), false);
+							if(option.isLegal())
 							{
 								coords.add(new Coordinates(x, y));
+								moves.add(new SimpleEntry<Coordinates, LegalMoveObj>(new Coordinates(x, y), option));
 							}
 						}
 					}
@@ -841,7 +894,7 @@ public class GoBoard {
 			
 			
 			//no legal moves are left for either player and goal is not met
-			if(coords.size() == 0)
+			if(moves.size() == 0)
 				return Double.NEGATIVE_INFINITY;
 		}
 			
@@ -852,14 +905,14 @@ public class GoBoard {
 		if(playerToMove == maximizingPlayer)
 		{
 			double bestSoFar = Double.NEGATIVE_INFINITY;
-			for(int i=0; i < coords.size(); i++)
+			for(int i=0; i < moves.size(); i++)
 			{
-				if(coords.get(i).y == 0 && coords.get(i).x == 12 && row == -1 && col == -1)
-				{
-					System.out.println();
-				}
+//				if(moves.get(i).getKey().y == 3 && moves.get(i).getKey().x == 7 && row == -1 && col == -1)
+//				{
+//					System.out.println();
+//				}
 				tempBoard = new GoBoard(currentBoard);
-				tempBoard.playMove(coords.get(i).y, coords.get(i).x, playerToMove);
+				tempBoard.playMove(moves.get(i).getKey().y, moves.get(i).getKey().x, playerToMove);
 				tempBoard.setPlayerToMove(playerToMove.getOpposingColour());
 				
 				// if we can record the state for the player, proceed, otherwise
@@ -888,25 +941,42 @@ public class GoBoard {
 						boardBuilder.append(ch);
 					}
 				}
-
+				//ExxxxxxxExxxxxxxExxxx--xExxxx--xExxxx-xoExxxxxo-Exxxx-o-ExxxxxooExxxxxxxExxxxxxxExxxxxxx
+//				if(boardBuilder.toString().equals("ExxxxxxxExxxxxxxExxxx--xExxxx--xExxxx-xoExxxxxo-Exxxx-o-ExxxxxooExxxxxxxExxxxxxxExxxxxxx"))
+//				if(boardBuilder.toString().equals("ExxxxxxxExxxxxxxExxxx-oxExxxxooxExxxxo-oExxxxxo-Exxxx-o-ExxxxxooExxxxxxxExxxxxxxExxxxxxx"))
+//					System.out.println();
 				//check if state is not examined before, if not add it and proceed
+
+//				String problem = 
+//						"ExxxxxxxExxxxxxxExxxxxoxExxxxoo-Exxxxo-oExxxxxo-Exxxx-ooExxxxxooExxxxxxxExxxxxxxExxxxxxx";
+//				if(boardBuilder.toString().equals(problem));
+//					System.out.println();
+					
 				if(dupCutter.addStringState(boardBuilder.toString(), playerToMove)) {
 				
 					double value = alphaBeta(0, 0, playerToMove.getOpposingColour(),
 							maximizingPlayer, tempBoard, depth + 1, alpha, beta);
 					
 					//once value is known update record for the map
-					dupCutter.getEvaluatedBoards()
-						.get(boardBuilder.toString()).put(playerToMove, value);
-					
+					if(value == -1)
+					{
+						// if depth was reached, unmark this board as evaluated
+						Map<StoneOwner, Double> mapVal = new HashMap<>();
+						mapVal.put(playerToMove, null);
+						dupCutter.getEvaluatedBoards().remove(boardBuilder.toString(), mapVal);
+					}
+					else {
+						dupCutter.getEvaluatedBoards()
+							.get(boardBuilder.toString()).put(playerToMove, value);
+					}
 					if(row == -1)
-						System.out.println(coords.get(i).y + ", " + coords.get(i).x + " " + value + " " + times);
+						System.out.println(moves.get(i).getKey().y + ", " + moves.get(i).getKey().x + " " + value + " " + times);
 					
 					bestSoFar = Double.max(value, bestSoFar);
 					if(value == Double.POSITIVE_INFINITY)
 					{
-						win_x = coords.get(i).x;
-						win_y = coords.get(i).y;
+						win_x = moves.get(i).getKey().x;
+						win_y = moves.get(i).getKey().y;
 					}
 				} 
 				else {
@@ -932,10 +1002,12 @@ public class GoBoard {
 		} else {
 			
 			double bestSoFar = Double.POSITIVE_INFINITY;
-			for(int i=0; i < coords.size(); i++)
+			for(int i=0; i < moves.size(); i++)
 			{
+//				if(moves.get(i).getKey().y == 2 && moves.get(i).getKey().x == 7)
+//					System.out.println();
 				tempBoard = new GoBoard(currentBoard);
-				tempBoard.playMove(coords.get(i).y, coords.get(i).x, playerToMove);
+				tempBoard.playMove(moves.get(i).getKey().y, moves.get(i).getKey().x, playerToMove);
 				tempBoard.setPlayerToMove(playerToMove.getOpposingColour());
 				
 				StringBuilder boardBuilder = new StringBuilder();
@@ -966,11 +1038,20 @@ public class GoBoard {
 					double value = alphaBeta(0, 0, playerToMove.getOpposingColour(),
 							maximizingPlayer, tempBoard, depth + 1, alpha, beta);
 					
-					//once value is known update record for the map
-					dupCutter.getEvaluatedBoards()
-						.get(boardBuilder.toString()).put(playerToMove, value);
+					if(value == -1)
+					{
+						// if depth was reached, unmark this board as evaluated
+						Map<StoneOwner, Double> mapVal = new HashMap<>();
+						mapVal.put(playerToMove, null);
+						dupCutter.getEvaluatedBoards().remove(boardBuilder.toString(), mapVal);
+					}
+					else {
+						//once value is known update record for the map
+						dupCutter.getEvaluatedBoards()
+							.get(boardBuilder.toString()).put(playerToMove, value);
 					
-					bestSoFar = Double.min(value, bestSoFar);
+						bestSoFar = Double.min(value, bestSoFar);
+					}
 //					if(bestSoFar == Double.NEGATIVE_INFINITY)
 //					{
 //						win_x = coords.get(i).x;
