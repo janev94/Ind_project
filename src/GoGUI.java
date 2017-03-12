@@ -39,7 +39,7 @@ public class GoGUI extends Application {
 	private int boardHeight;
 	
 	private int SQ_SIDE = 40;
-	private int RADIUS = 10;
+	private int RADIUS = 15;
 	private int vPadding = 100;
 	private int hPadding = 50;
 
@@ -86,20 +86,20 @@ public class GoGUI extends Application {
         System.out.println("liberties: ");
 	}
 
-	private void checkAndMoveAI() {
-		
-		if(players[StoneOwner.valueOf(playerToMove.toString()).ordinal()] == GoPlayer.ARTIFICIAL)
-        {
-			if(countLegals() == 0)
-        		return;
-			
-			board.playAIMove(playerToMove);
-        	playerToMove = playerToMove.getOpposingColour();
-        	board.setPlayerToMove(playerToMove);
-        	label.setText("Player to move: " + playerToMove);
-        	renderBoard();
-        }
-	}
+//	private void checkAndMoveAI() {
+//		
+//		if(players[StoneOwner.valueOf(playerToMove.toString()).ordinal()] == GoPlayer.ARTIFICIAL)
+//        {
+//			if(countLegals() == 0)
+//        		return;
+//			
+//			board.playAIMove(playerToMove);
+//        	playerToMove = playerToMove.getOpposingColour();
+//        	board.setPlayerToMove(playerToMove);
+//        	label.setText("Player to move: " + playerToMove);
+//        	renderBoard();
+//        }
+//	}
 	
 	private int countLegals()
 	{
@@ -229,12 +229,12 @@ public class GoGUI extends Application {
 			}
 		});
         
-        moveAI.setOnAction(new EventHandler<ActionEvent>() {
-			@Override
-			public void handle(ActionEvent event) {
-				checkAndMoveAI();
-			}
-		});
+//        moveAI.setOnAction(new EventHandler<ActionEvent>() {
+//			@Override
+//			public void handle(ActionEvent event) {
+//				checkAndMoveAI();
+//			}
+//		});
         
 
         actionMenu.getItems().addAll(checkLegalsItem, moveAI);
@@ -330,10 +330,15 @@ public class GoGUI extends Application {
 //		BoardParserFile fileParser = new BoardParserFile("6die_black_border.gpr");
 //		BoardParserFile fileParser = new BoardParserFile("7unsettled_sente.gpr");
 //		BoardParserFile fileParser = new BoardParserFile("7unsettled_gote.gpr");
-//		BoardParserFile fileParser = new BoardParserFile("8live_black_border.gpr");
+		BoardParserFile fileParser = new BoardParserFile("8live_black_border.gpr");
 		
 //		BoardParserFile fileParser = new BoardParserFile("book_examples/problem_4.gpr");
-		BoardParserFile fileParser = new BoardParserFile("book_examples/kill_center");
+//		BoardParserFile fileParser = new BoardParserFile("book_examples/problem_271.gpr");
+//		BoardParserFile fileParser = new BoardParserFile("book_examples/kill_center");
+//		BoardParserFile fileParser = new BoardParserFile("book_examples/271_experiment2.gpr");
+//		BoardParserFile fileParser = new BoardParserFile("book_examples/problem_1.gpr");
+//		BoardParserFile fileParser = new BoardParserFile("book_examples/problem_3.gpr");
+//		BoardParserFile fileParser = new BoardParserFile("book_examples/problem_273.gpr");
 		
 		fileParser.parse();
 		
